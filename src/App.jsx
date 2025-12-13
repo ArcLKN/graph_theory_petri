@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ChangeValue } from "./components/changeValue";
+import { ChangeValueDialogBox } from "./components/changeValue";
 import { Button } from "./components/ui/button";
 import {
 	ButtonGroup,
 	ButtonGroupSeparator,
 	ButtonGroupText,
 } from "@/components/ui/button-group"
-import { Hand, HandGrab, Eraser } from "lucide-react";
+import { Hand, HandGrab, Eraser, Settings } from "lucide-react";
 
 function addPlace(setPlaces) {
 	// Logic to add a place to the Pétri Network
@@ -69,10 +69,10 @@ function App() {
 	return (
 		<>
 			{isDialogBoxOpen && (
-				<ChangeValue
+				<ChangeValueDialogBox
 					setDialogBoxIsOpen={setDialogBoxIsOpen}
-					value={inputValue}
-					onChange={setInputValue}
+					selectedId={selectedElement}
+					setPlaces={setPlaces}
 				/>
 			)}
 			<div className='App px-16 py-4 space-y-4'>
@@ -164,6 +164,7 @@ function App() {
 									id: Date.now(),
 									x: mousePos.x - 16,
 									y: mousePos.y - 16,
+									value: 0,
 								},
 							]);
 
@@ -251,9 +252,18 @@ function App() {
 						/>
 					)}
 					{places.map((place) => (
-						<div>
+						<div key={place.id}>
 							{place.id === selectedElement && (
-								<ButtonGroup orientation="horizontal" className="absolute w-fit" style={{ left: place.x - 20, top: place.y - 50 }}>
+								<ButtonGroup orientation="horizontal" className="absolute w-fit" style={{ left: place.x - 40, top: place.y - 50 }}>
+									<Button
+										variant="outline"
+										size="icon"
+										onClick={() => {
+											setDialogBoxIsOpen(true);
+										}}
+									>
+										<Settings />
+									</Button>
 									<Button
 										variant="outline"
 										size="icon"
@@ -286,7 +296,7 @@ function App() {
 
 							<div
 								key={place.id}
-								className={`absolute w-8 h-8 rounded-full hover:border-2 hover:border-blue-500 ${selectedElement === place.id
+								className={`absolute flex items-center justify-center w-8 h-8 rounded-full hover:border-2 hover:border-blue-500 ${selectedElement === place.id
 									? "bg-blue-500"
 									: "bg-gray-500"
 									}`}
@@ -316,12 +326,12 @@ function App() {
 
 									setSelectedElement(selectedElement === place.id ? null : place.id);
 								}}
-							></div>
+							><p className="text-white pointer-events-none">{place.value}</p></div>
 						</div>
 					))}
 					{selectedArc && (
 						<>
-							<button
+							<Button
 								variant="outline"
 								className="absolute text-blue-500"
 								size="icon"
@@ -339,7 +349,7 @@ function App() {
 								}
 							>
 								◉
-							</button>
+							</Button>
 						</>
 					)}
 				</div>
