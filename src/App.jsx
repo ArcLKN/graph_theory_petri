@@ -208,7 +208,7 @@ function App() {
 					{places.map((place) => (
 						<div key={place.id}>
 							{place.id === selectedElement && (
-								<ButtonGroup orientation="horizontal" className="absolute w-fit" style={{ left: place.x - 20, top: place.y - 50 }}>
+								<ButtonGroup orientation="horizontal" className="absolute w-fit" style={{ left: place.x - 40, top: place.y - 50 }}>
 									<Button
 										variant="outline"
 										size="icon"
