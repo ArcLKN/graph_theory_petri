@@ -36,13 +36,24 @@ function App() {
 	const [isDialogBoxOpen, setDialogBoxIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState(1);
 	const [doSimulation, setDoSimulation] = useState(false);
+
 	const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
 	const [selectedElement, setSelectedElement] = useState(null);
+
 	const [placingPlace, setPlacingPlace] = useState(false);
 	const [places, setPlaces] = useState([]);
-	const [transitions, setTransitions] = useState([]);
-	const [arcs, setArcs] = useState([]);
 	const [movingPlaceId, setMovingPlaceId] = useState(null);
+
+	const [arcs, setArcs] = useState([]);
+	const [creatingArc, setCreatingArc] = useState(false);
+	const [arcStartPlaceId, setArcStartPlaceId] = useState(null);
+	const [editingArcEnd, setEditingArcEnd] = useState(null);
+
+	const [transitions, setTransitions] = useState([]);
+
+	const selectedArc = arcs.find((a) => a.id === selectedElement) || null;
+
 
 	return (
 		<>
@@ -70,7 +81,11 @@ function App() {
 						<button className='bg-gray-200' onClick={null}>
 							Add Transition
 						</button>
-						<button className='bg-gray-200' onClick={null}>
+						<button className='bg-gray-200' onClick={() => {
+							setCreatingArc(!creatingArc);
+							setArcStartPlaceId(null);
+						}
+						}>
 							Add Arc
 						</button>
 						<button className='bg-gray-200' onClick={null}>
@@ -105,8 +120,6 @@ function App() {
 						});
 					}}
 					onClick={() => {
-						if (!placingPlace && !movingPlaceId) return;
-
 						if (
 							movingPlaceId
 						) {
@@ -139,6 +152,43 @@ function App() {
 					}}
 				>
 					{/* Canvas for drawing Pétri Network will go here */}
+					<svg className="absolute inset-0 w-full h-full pointer-events-none">
+						{arcs.map((arc) => {
+							const fromPlace = places.find((p) => p.id === arc.from);
+							const toPlace = places.find((p) => p.id === arc.to);
+							if (!fromPlace || !toPlace) return null;
+
+							return (<line
+								key={arc.id}
+								x1={fromPlace.x + 16}
+								y1={fromPlace.y + 16}
+								x2={toPlace.x + 16}
+								y2={toPlace.y + 16}
+								stroke="black"
+								strokeWidth="2"
+								pointerEvents="stroke"
+								onClick={() => {
+									console.log("Arc clicked:", arc.id);
+									setSelectedElement(arc.id);
+								}}
+							/>);
+						})}
+						{creatingArc && arcStartPlaceId && (
+							(() => {
+								const fromPlace = places.find((p) => p.id === arcStartPlaceId);
+								if (!fromPlace) return null;
+								return (<line
+									x1={fromPlace.x + 16}
+									y1={fromPlace.y + 16}
+									x2={mousePos.x}
+									y2={mousePos.y}
+									stroke="black"
+									strokeWidth="2"
+								/>);
+							})()
+						)}
+					</svg>
+
 					{(placingPlace || movingPlaceId) && (
 						<div
 							className='absolute w-8 h-8 rounded-full border-2 border-dashed border-black bg-white opacity-70 pointer-events-none'
@@ -190,11 +240,56 @@ function App() {
 									}`}
 								style={{ left: place.x, top: place.y }}
 								onClick={() => {
+									if (creatingArc && arcStartPlaceId === null) {
+										setArcStartPlaceId(place.id);
+										return;
+									}
+
+									if (creatingArc && arcStartPlaceId !== null) {
+										if (place.id !== arcStartPlaceId) {
+											setArcs((prev) => [
+												...prev,
+												{
+													id: Date.now(),
+													from: arcStartPlaceId,
+													to: place.id,
+												},
+											]);
+										}
+
+										setCreatingArc(false);
+										setArcStartPlaceId(null);
+										return;
+									}
+
 									setSelectedElement(selectedElement === place.id ? null : place.id);
 								}}
 							></div>
 						</div>
 					))}
+					{selectedArc && (
+						<>
+							<button
+								variant="outline"
+								className="absolute text-blue-500"
+								size="icon"
+								style={{
+									left:
+										places.find(p => p.id === selectedArc.from).x,
+									top:
+										places.find(p => p.id === selectedArc.from).y,
+								}}
+								onClick={() =>
+									setEditingArcEnd({
+										arcId: selectedArc.id,
+										end: "from",
+									})
+								}
+							>
+								◉
+							</button>
+						</>
+					)}
 				</div>
 			</div>
 		</>
