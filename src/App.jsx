@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { ChangeValue } from "./components/changeValue";
 import { Button } from "./components/ui/button";
-import { Hand, HandGrab } from "lucide-react";
+import {
+	ButtonGroup,
+	ButtonGroupSeparator,
+	ButtonGroupText,
+} from "@/components/ui/button-group"
+import { Hand, HandGrab, Eraser } from "lucide-react";
 
 function addPlace(setPlaces) {
 	// Logic to add a place to the Pétri Network
@@ -146,21 +151,35 @@ function App() {
 					{places.map((place) => (
 						<div>
 							{place.id === selectedElement && (
-								<Button
-									variant="outline"
-									size="icon"
-									className="absolute"
-									style={{ left: place.x, top: place.y - 40 }}
-									onClick={() => {
-										setMovingPlaceId(
-											movingPlaceId === place.id ? null : place.id
-										);
-									}}
-								>
-									{
-										movingPlaceId === place.id ? <HandGrab /> : <Hand />
-									}
-								</Button>
+								<ButtonGroup orientation="horizontal" className="absolute w-fit" style={{ left: place.x - 20, top: place.y - 50 }}>
+									<Button
+										variant="outline"
+										size="icon"
+										onClick={() => {
+											setMovingPlaceId(
+												movingPlaceId === place.id ? null : place.id
+											);
+										}}
+									>
+										{
+											movingPlaceId === place.id ? <HandGrab /> : <Hand />
+										}
+									</Button>
+									<Button
+										variant="outline"
+										className="bg-red-300 hover:bg-red-300"
+										size="icon"
+										onClick={() => {
+											// Delete place
+											setPlaces((prev) =>
+												prev.filter((p) => p.id !== place.id)
+											);
+											setSelectedElement(null);
+										}}
+									>
+										<Eraser />
+									</Button>
+								</ButtonGroup>
 							)}
 
 							<div
