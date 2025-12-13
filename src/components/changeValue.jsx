@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export function ChangeValue({ setDialogBoxIsOpen, value, onChange }) {
+export function ChangeValueDialogBox({ setDialogBoxIsOpen, selectedId, setPlaces }) {
 	const [inputValue, setInputValue] = useState(0);
 
 	return (
@@ -15,7 +15,8 @@ export function ChangeValue({ setDialogBoxIsOpen, value, onChange }) {
 						type='number'
 						className='w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
 						autoFocus
-						onChange={(e) => Number(e.target.value)}
+						value={inputValue}
+						onChange={(e) => setInputValue(Number(e.target.value))}
 					/>
 				</div>
 				<div className='flex justify-end gap-3'>
@@ -29,7 +30,14 @@ export function ChangeValue({ setDialogBoxIsOpen, value, onChange }) {
 					</button>
 					<button
 						className='px-4 py-2 bg-blue-500 text-gray-800 rounded hover:bg-blue-600'
-						onClick={() => setDialogBoxIsOpen(false)}
+						onClick={() => {
+							setPlaces((prev) =>
+								prev.map((place) =>
+									place.id === selectedId ? { ...place, value: inputValue } : place
+								)
+							);
+							setDialogBoxIsOpen(false);
+						}}
 					>
 						Save
 					</button>
