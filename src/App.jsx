@@ -107,7 +107,11 @@ function App() {
 						}}>
 							Delete Arcs
 						</button>
-						<button className='bg-red-400' onClick={null}>
+						<button className='bg-red-400' onClick={() => {
+							setPlaces([]);
+							setArcs([]);
+							setTransitions([]);
+						}}>
 							Delete All
 						</button>
 					</div>
