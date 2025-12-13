@@ -20,8 +20,18 @@ function addPlace(setPlaces) {
 	]);
 }
 
-function addTransition() {
+function addTransition(setTransitions, mousePos) {
 	// Logic to add a transition to the Pétri Network
+	setTransitions((prevTransitions) => [
+    ...prevTransitions,
+    {
+      id: Date.now(),
+      x: mousePos.x - 20, // Ajuste pour centrer le rectangle
+      y: mousePos.y - 30,
+      width: 20, // largeur du rectangle
+      height: 60, // hauteur du rectangle
+    },
+  ]);
 }
 
 function addArc() {
@@ -50,6 +60,7 @@ function App() {
 	const [arcStartPlaceId, setArcStartPlaceId] = useState(null);
 	const [editingArcEnd, setEditingArcEnd] = useState(null);
 
+	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
 
 	const selectedArc = arcs.find((a) => a.id === selectedElement) || null;
@@ -78,7 +89,10 @@ function App() {
 						>
 							Add Place
 						</button>
-						<button className='bg-gray-200' onClick={null}>
+						<button
+							className='bg-gray-200'
+							onClick={() => setPlacingTransition(true)}
+						>
 							Add Transition
 						</button>
 						<button className='bg-gray-200' onClick={() => {
@@ -154,6 +168,10 @@ function App() {
 							]);
 
 							setPlacingPlace(false);
+						} else if (placingTransition) {
+							addTransition(setTransitions, mousePos);
+							setPlacingTransition(false);
+							return;
 						}
 					}}
 				>
@@ -192,6 +210,34 @@ function App() {
 									strokeWidth="2"
 								/>);
 							})()
+						)}
+						{transitions.map((transition) => (
+							<rect
+								key={transition.id}
+								x={transition.x}
+								y={transition.y}
+								width={transition.width}
+								height={transition.height}
+								fill={selectedElement === transition.id ? "blue" : "gray"}
+								stroke="black"
+								strokeWidth="2"
+								onClick={(e) => {
+								e.stopPropagation(); // empêche de déclencher le click du canvas
+								setSelectedElement(transition.id);
+								}}
+							/>
+						))}
+						{placingTransition && (
+							<rect
+								x={mousePos.x - 20}
+								y={mousePos.y - 30}
+								width={20}
+								height={60}
+								fill="rgba(0,0,0,0.2)" // rectangle fantôme pendant le placement
+								stroke="black"
+								strokeWidth="2"
+								pointerEvents="none"
+							/>
 						)}
 					</svg>
 
