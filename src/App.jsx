@@ -205,7 +205,7 @@ function App() {
 						/>
 					)}
 					{places.map((place) => (
-						<div>
+						<div key={place.id}>
 							{place.id === selectedElement && (
 								<ButtonGroup orientation="horizontal" className="absolute w-fit" style={{ left: place.x - 20, top: place.y - 50 }}>
 									<Button
@@ -275,7 +275,7 @@ function App() {
 					))}
 					{selectedArc && (
 						<>
-							<button
+							<Button
 								variant="outline"
 								className="absolute text-blue-500"
 								size="icon"
@@ -293,7 +293,7 @@ function App() {
 								}
 							>
 								◉
-							</button>
+							</Button>
 						</>
 					)}
 				</div>
