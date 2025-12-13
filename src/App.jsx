@@ -102,7 +102,9 @@ function App() {
 						<button className='bg-red-300' onClick={null}>
 							Delete Element
 						</button>
-						<button className='bg-red-400' onClick={null}>
+						<button className='bg-red-400' onClick={() => {
+							setArcs([]);
+						}}>
 							Delete Arcs
 						</button>
 						<button className='bg-red-400' onClick={null}>
