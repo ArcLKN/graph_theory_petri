@@ -129,7 +129,9 @@ function App() {
 									: "Start Simulation"}
 							</Button>
 							<DropdownMenu>
-								<DropdownMenuTrigger asChild><Button variant="outline" className="bg-blue-300 text-foreground hover:bg-blue-400  hover:text-accent-foreground">More</Button></DropdownMenuTrigger>
+								<DropdownMenuTrigger asChild>
+									<Button variant="outline" className="bg-blue-300 text-foreground hover:bg-blue-400  hover:text-accent-foreground">More</Button>
+								</DropdownMenuTrigger>
 								<DropdownMenuContent>
 									<DropdownMenuLabel>Simulation</DropdownMenuLabel>
 									<DropdownMenuSeparator />
@@ -291,6 +293,7 @@ function App() {
 												id: Date.now(),
 												from: arcStartId,
 												to: transition.id,
+												value: 1,
 											},
 										]);
 										setCreatingArc(false);
@@ -456,6 +459,21 @@ function App() {
 							</Button>
 						</>
 					)}
+					{arcs.map((arc) => {
+						const fromPlace = places.find(p => p.id === arc.from) || transitions.find(t => t.id === arc.from);
+						const toPlace = places.find(p => p.id === arc.to) || transitions.find(t => t.id === arc.to);
+						if (!fromPlace || !toPlace) return null;
+
+						return (<p
+							key={arc.id + "-value"}
+							className="absolute"
+							style={{
+								left: (fromPlace.x + toPlace.x) / 2 + 15,
+								top: (fromPlace.y + toPlace.y) / 2 + 20,
+							}
+							}
+						>{arc.value}</p>);
+					})}
 				</div>
 			</div>
 		</>
