@@ -631,6 +631,85 @@ lignes de test pour les fonctions => les enlever avant de push ou les rajouter s
 
 export { reseau, isBipartite, marquageValide, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
 
+function puits(reseaux){
+    let puit = [];
+    // on trouve les noeuds qui n'ont pas de connexions
+    for (let node in reseaux){
+        if (reseaux[node].length === 1){
+            puit.push(node);
+        }
+    }
+    return puit;
+}
+
+function sources(reseaux){
+    let compare = [];
+    let source = [];
+
+    // compare <-- tous les noeuds connectés
+    for (let node in reseaux){
+        for (let i = 1; i < reseaux[node].length; i++){
+            if (!compare.includes(reseaux[node][i][0])){
+                compare.push(reseaux[node][i][0]);
+            }
+        }
+    }
+    // source <-- noeuds not in compare
+    for (let node in reseaux){
+        if (!compare.includes(node)){
+            source.push(node);
+        }
+    }
+
+    return source;
+}
+
+//vérifie si le réseau est simple 
+function estSimple(reseaux) {
+    // Pour chaque noeuds on vérifie si il n'y a pas deux liens vers le même noeud
+    for (let node in reseaux) {
+        let liens = [];
+
+        for (let i = 1; i < reseaux[node].length; i++) {
+            let cible = reseaux[node][i][0];
+
+            // vérifier si la cible existe déjà dans le tableau destinations
+            for (let j = 0; j < liens.length; j++) {
+                if (liens[j] === cible) {
+                    return false;
+                }
+            }
+            liens.push(cible);
+        }
+    }
+    return true;
+}
+
+function DFS(reseaux, départ) {
+    var visités = [];
+    var étatsTrouvés = [];
+    var pile = [départ];
+
+    while (pile.length > 0) {
+        var noeud = pile.pop();
+
+        if (!(visités.includes(noeud))){
+            visités.push(noeud);
+            if (noeud[0] === "E") {
+                étatsTrouvés.push(noeud);
+            }
+
+             var arcs = reseaux[noeud];
+            for (var j = 1; j < arcs.length; j++) {
+                var voisin = arcs[j][0];
+                pile.push(voisin);
+            }
+        }
+    }
+
+    return étatsTrouvés;
+}
+
 function reachable(from, to, graph) {
   const visited = new Set();
   const queue = [from];
