@@ -121,12 +121,14 @@ function marquageInitial(graph) {
 calculNouveauMarquage - Simule le tir d'une transition de manière hypothétique
 Description: Crée une copie du marquage, retire les jetons nécessaires des états d'entrée, ajoute les jetons aux états de sortie.
 Important: L'original n'est jamais touché. C'est pour tester "et si on tirait cette transition?" sans modifier le réseau réel.
+IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids).
 Fonctionnement:
 1. Crée une copie du marquage avec spread operator {...marquage}
-2. Parcourt tous les états pour trouver ceux qui pointent vers la transition T (états d'entrée)
-3. Retire les jetons de ces états selon le poids des arcs (consommation)
-4. Ajoute les jetons aux états de sortie de la transition (production)
-5. Retourne le nouveau marquage sans toucher l'original
+2. Parcourt tous les états pour trouver ceux qui pointent vers la transition (états d'entrée)
+3. Pour chaque état, accumule les poids de tous les arcs qui pointent vers la transition
+4. Retire la somme totale des jetons de l'état selon les poids cumulés (consommation)
+5. Ajoute les jetons aux états de sortie de la transition (production)
+6. Retourne le nouveau marquage sans toucher l'original
 Retourne: nouveau marquage (objet) avec les jetons mis à jour, l'original reste intact
 Relations: Utilisée par isBorne pour tester plusieurs tirs sans modifier le réseau réel. Différente de echangeRessources qui mute.
 */
@@ -135,11 +137,17 @@ function calculNouveauMarquage(transition, marquage, graph) {
 
     for (const noeud in graph) {
         if (noeud.startsWith("E")) {
+            let total_poids = 0;
+            
             for (const arc of graph[noeud].slice(1)) {
                 const [destination, poids] = arc;
                 if (destination === transition) {
-                    nouveau[noeud] -= poids;
+                    total_poids = total_poids + poids;
                 }
+            }
+            
+            if (total_poids > 0) {
+                nouveau[noeud] -= total_poids;
             }
         }
     }
@@ -156,28 +164,35 @@ function calculNouveauMarquage(transition, marquage, graph) {
 
 /*
 isFranchissable - Vérifie si une transition peut être tirée
-Description: Parcours tous les états qui pointent vers cette transition et vérifie qu'ils ont assez de jetons.
-Exemple: Si E1→T1 avec poids 2, alors E1 doit avoir au moins 2 jetons pour que T1 soit franchissable.
+Description: Parcourt tous les états qui pointent vers cette transition et vérifie qu'ils ont assez de jetons.
+IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids).
+Exemple simple: Si E1→T1 avec poids 2, alors E1 doit avoir au moins 2 jetons pour que T1 soit franchissable.
+Exemple multi-arcs: Si E1 a deux arcs vers T1 (poids 2 et 3), alors E1 doit avoir au moins 5 jetons (2+3).
 Fonctionnement:
 1. Parcourt tous les nœuds du réseau
-2. Pour chaque état (E), regarde ses arcs sortants
-3. Si un arc pointe vers la transition demandée, vérifie que l'état a assez de jetons (jetons >= poids)
-4. Si un seul état manque de jetons, retourne false
-5. Si tous les états d'entrée ont assez de jetons, retourne true
+2. Pour chaque état (E), regarde tous ses arcs sortants
+3. Accumule les poids de tous les arcs qui pointent vers la transition demandée
+4. Vérifie que l'état a assez de jetons pour la somme totale des poids
+5. Si un seul état manque de jetons, retourne false
+6. Si tous les états d'entrée ont assez de jetons, retourne true
 Retourne: booléen (true si la transition peut être tirée, false sinon)
 Relations: Appelée AVANT echangeRessources dans simulation. Utilisée par isDeadlock et isBorne.
 */
 function isFranchissable(reseau, transitionId) {
     for (const noeud in reseau) {
         if (noeud.startsWith("E")) {
+            let total_poids = 0;
+
             const arcs = reseau[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
-                    if (reseau[noeud][0] < poids) {
-                        return false;
-                    }
+                    total_poids = total_poids + poids;
                 }
+            }
+            
+            if (total_poids > 0 && reseau[noeud][0] < total_poids) {
+                return false;
             }
         }
     }
@@ -188,26 +203,33 @@ function isFranchissable(reseau, transitionId) {
 echangeRessources - Exécute le tir d'une transition pour de vrai
 Description: Contrairement à calculNouveauMarquage, cette fonction modifie directement l'objet reseau.
 Retire les jetons des états d'entrée, ajoute les jetons aux états de sortie.
+IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids retirés).
 Fonctionnement:
 1. Parcourt tous les états du réseau
-2. Trouve ceux qui pointent vers la transition (états d'entrée)
-3. Retire les jetons de ces états selon le poids des arcs (consommation)
+2. Pour chaque état, accumule les poids de tous les arcs qui pointent vers la transition
+3. Retire la somme totale des jetons de l'état (consommation)
 4. Parcourt les arcs sortants de la transition
 5. Ajoute les jetons aux états de sortie selon les poids (production)
-6. Mutation directe: reseau[noeud][0] -= poids ou += poids
+6. Mutation directe: reseau[noeud][0] -= total_poids ou += poids
 Retourne: rien (void) car la mutation de reseau est l'effet voulu
 Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Différente de calculNouveauMarquage (retourne copie).
-Changements: Nouvelle fonction pour simulation réelle, complète calculNouveauMarquage qui reste pour tests hypothétiques.
+Changements: Amélioration pour gérer plusieurs arcs d'un même état vers une transition (cohérence avec isFranchissable)
 */
 function echangeRessources(reseau, transitionId) {
     for (const noeud in reseau) {
         if (noeud.startsWith("E")) {
+            let total_poids = 0;
+            
             const arcs = reseau[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
-                    reseau[noeud][0] -= poids;
+                    total_poids = total_poids + poids;
                 }
+            }
+            
+            if (total_poids > 0) {
+                reseau[noeud][0] -= total_poids;
             }
         }
     }
@@ -218,7 +240,6 @@ function echangeRessources(reseau, transitionId) {
         reseau[destination][0] += poids;
     }
 }
-
 
 /*
 isDeadlock - Détecte si le système est bloqué définitivement
@@ -250,45 +271,48 @@ Description: Simule plusieurs tirs de transitions pour explorer l'espace d'état
 Importance: Une simple vérification de l'état actuel ne suffit pas. Le réseau pourrait avoir E1=5 au départ mais après 10 tirs, E1=50.
 Fonctionnement:
 1. Démarre avec le marquage initial
-2. Pour chaque marquage exploré (jusqu'à maxIterations=100):
+2. Utilise une queue FIFO (BFS complète) pour explorer TOUS les marquages possibles
+3. Pour chaque marquage de la queue (jusqu'à maxIterations=1000):
    a. Vérifie si un état > borneMax → retourne false immédiatement
-   b. Trouve toutes les transitions franchissables avec isFranchissable
+   b. Trouve toutes les transitions franchissables
    c. Pour chaque transition franchissable, simule son tir avec calculNouveauMarquage
-   d. Ajoute les nouveaux marquages uniques à la liste d'exploration (évite boucles infinies avec Set)
-3. Si aucun dépassement trouvé après exploration complète → retourne true
-Méthode: Utilise BFS pour explorer l'espace d'états. Set de marquages visités pour éviter de revisiter les mêmes états.
-Paramètres: graph (réseau), borneMax (limite de jetons par état), maxIterations (limite d'exploration)
+   d. Ajoute les nouveaux marquages uniques à la queue (évite boucles infinies avec Set)
+4. Si aucun dépassement trouvé après exploration complète → retourne true
+Méthode: Utilise BFS avec queue FIFO pour explorer tout l'espace d'états. Set de marquages visités pour éviter de revisiter les mêmes états.
+Particularités gérées: Cycles accumulateurs, branches parallèles, réseaux complexes.
+Paramètres: graph (réseau), borneMax (limite de jetons par état), maxIterations (limite d'exploration, défaut=5000)
 Retourne: booléen (false si un état dépasse borneMax, true si tous respectent la borne)
 Relations: Utilise calculNouveauMarquage pour simulations hypothétiques sans modifier le réseau réel.
 */
-function isBorne(graph, borneMax, maxIterations = 100) {
-    const marquages = [marquageInitial(graph)];
+function isBorne(graph, borneMax, maxIterations = 5000) {
+    const marquageInitial_debut = marquageInitial(graph);
+    const queue = [marquageInitial_debut];
     const visites = new Set();
-    visites.add(JSON.stringify(marquages[0]));
+    visites.add(JSON.stringify(marquageInitial_debut));
     
-    for (let i = 0; i < maxIterations; i++) {
-        let nouveauMarquageTrouve = false;
+    let compteur = 0;
+    
+    while (queue.length > 0 && compteur < maxIterations) {
+        const marquageActuel = queue.shift();
+        compteur++;
         
-        for (const marquage of marquages) {
-            for (const noeud in graph) {
-                if (noeud.startsWith("E")) {
-                    if (marquage[noeud] > borneMax) {
-                        return false;
-                    }
+        for (const noeud in graph) {
+            if (noeud.startsWith("E")) {
+                if (marquageActuel[noeud] > borneMax) {
+                    return false;
                 }
             }
         }
         
-        const derniereMarquage = marquages[marquages.length - 1];
-        for (const noeud in graph) {
-            if (noeud.startsWith("T")) {
+        for (const transition in graph) {
+            if (transition.startsWith("T")) {
                 let peutTirer = true;
                 for (const etat in graph) {
                     if (etat.startsWith("E")) {
                         const arcs = graph[etat].slice(1);
                         for (const arc of arcs) {
                             const [destination, poids] = arc;
-                            if (destination === noeud && derniereMarquage[etat] < poids) {
+                            if (destination === transition && marquageActuel[etat] < poids) {
                                 peutTirer = false;
                                 break;
                             }
@@ -298,19 +322,16 @@ function isBorne(graph, borneMax, maxIterations = 100) {
                 }
                 
                 if (peutTirer) {
-                    const nouveauMarquage = calculNouveauMarquage(noeud, derniereMarquage, graph);
+                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, graph);
                     const marquageStr = JSON.stringify(nouveauMarquage);
                     
                     if (!visites.has(marquageStr)) {
                         visites.add(marquageStr);
-                        marquages.push(nouveauMarquage);
-                        nouveauMarquageTrouve = true;
+                        queue.push(nouveauMarquage);
                     }
                 }
             }
         }
-        
-        if (!nouveauMarquageTrouve) break;
     }
     
     return true;
@@ -338,5 +359,6 @@ function simulation(reseau, transitionId) {
 lignes de test pour les fonctions => les enlever avant de push ou les rajouter si faire test
 + décommenter la ligne export
 */
+
 
 export { reseau, isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
