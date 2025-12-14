@@ -72,6 +72,8 @@ function App() {
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
 
+
+	const selectedPlace = places.find((place) => place.id === selectedElement) || null;
 	const selectedArc = arcs.find((a) => a.id === selectedElement) || null;
 	const selectedTransition = transitions.find(t => t.id === selectedElement);
 
@@ -81,8 +83,29 @@ function App() {
 			{isDialogBoxOpen && (
 				<ChangeValueDialogBox
 					setDialogBoxIsOpen={setDialogBoxIsOpen}
-					selectedId={selectedElement}
-					setPlaces={setPlaces}
+					previousValue={(selectedPlace ?? selectedArc).value ?? 1}
+					onSave={(value) => {
+						if (selectedPlace) {
+							// Update place value
+							setPlaces((prev) =>
+								prev.map((place) =>
+									place.id === selectedElement
+										? { ...place, value: value }
+										: place
+								)
+							);
+						} else if (selectedArc) {
+							// Update arc value
+							setArcs((prev) =>
+								prev.map((arc) =>
+									arc.id === selectedElement
+										? { ...arc, value: value }
+										: arc
+								)
+							);
+						}
+					}
+					}
 				/>
 			)}
 			<div className='App px-16 py-4 space-y-4'>
@@ -402,6 +425,7 @@ function App() {
 												id: Date.now(),
 												from: arcStartId,
 												to: place.id,
+												value: 1,
 											},
 										]);
 
@@ -444,9 +468,9 @@ function App() {
 								size="icon"
 								style={{
 									left:
-										places.find(p => p.id === selectedArc.from).x,
+										(places.find(p => p.id === selectedArc.from) || transitions.find(t => t.id === selectedArc.from)).x,
 									top:
-										places.find(p => p.id === selectedArc.from).y,
+										(places.find(p => p.id === selectedArc.from) || transitions.find(t => t.id === selectedArc.from)).y,
 								}}
 								onClick={() =>
 									setEditingArcEnd({
@@ -464,15 +488,37 @@ function App() {
 						const toPlace = places.find(p => p.id === arc.to) || transitions.find(t => t.id === arc.to);
 						if (!fromPlace || !toPlace) return null;
 
-						return (<p
-							key={arc.id + "-value"}
-							className="absolute"
-							style={{
-								left: (fromPlace.x + toPlace.x) / 2 + 15,
-								top: (fromPlace.y + toPlace.y) / 2 + 20,
-							}
-							}
-						>{arc.value}</p>);
+						return (
+							<div>
+								<p
+									key={arc.id + "-value"}
+									className="absolute"
+									style={{
+										left: (fromPlace.x + toPlace.x) / 2 + 15,
+										top: (fromPlace.y + toPlace.y) / 2 + 20,
+									}}
+								>{arc.value}
+								</p>
+								{
+									selectedElement === arc.id && (
+										<Button
+											variant="outline"
+											size="icon"
+											className="absolute"
+											style={{
+												left: (fromPlace.x + toPlace.x) / 2,
+												top: (fromPlace.y + toPlace.y) / 2 + 40,
+											}}
+											onClick={() => {
+												setDialogBoxIsOpen(true);
+											}}
+										>
+											<Settings />
+										</Button>
+									)
+								}
+							</div>
+						);
 					})}
 				</div>
 			</div>

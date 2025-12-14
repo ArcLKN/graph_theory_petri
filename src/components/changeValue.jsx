@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function ChangeValueDialogBox({ setDialogBoxIsOpen, selectedId, setPlaces }) {
-	const [inputValue, setInputValue] = useState(0);
+export function ChangeValueDialogBox({
+	setDialogBoxIsOpen,
+	previousValue,
+	onSave,
+}) {
+	const [inputValue, setInputValue] = useState(previousValue);
 
 	return (
 		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
@@ -32,11 +36,7 @@ export function ChangeValueDialogBox({ setDialogBoxIsOpen, selectedId, setPlaces
 					<Button
 						className='px-4 py-2 bg-blue-500 text-gray-800 rounded hover:bg-blue-600'
 						onClick={() => {
-							setPlaces((prev) =>
-								prev.map((place) =>
-									place.id === selectedId ? { ...place, value: inputValue } : place
-								)
-							);
+							onSave(inputValue);
 							setDialogBoxIsOpen(false);
 						}}
 					>
