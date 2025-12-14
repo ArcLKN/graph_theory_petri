@@ -1,4 +1,4 @@
-const reseau = { 
+var reseau = { 
     "E1": [10, ["T1", 2]], 
     "T1": [0, ["E2", 1], ["E4", 1]], 
     "E2": [0, ["T2", 2]], 
@@ -8,10 +8,10 @@ const reseau = {
     "E5": [0]
 };
 
-let etatDepart;
+var etatDepart;
 etatDepart = "E1";
 
-let valDepart;
+var valDepart;
 valDepart = 10;
 
 /*
@@ -50,6 +50,8 @@ function isBipartite(graph) {
         }
     }
 
+    /* Debugg
+
     const p1 = [];
     const p2 = [];
     for (const noeud of nodes) {
@@ -59,6 +61,7 @@ function isBipartite(graph) {
 
     console.log("partition p1 :", p1);
     console.log("partition p2 :", p2);
+    */
 
     return true;
 }
@@ -153,7 +156,7 @@ function calculNouveauMarquage(transition, marquage, graph) {
 
 /*
 isFranchissable - Vérifie si une transition peut être tirée
-Description: Parcourt tous les états qui pointent vers cette transition et vérifie qu'ils ont assez de jetons.
+Description: Parcours tous les états qui pointent vers cette transition et vérifie qu'ils ont assez de jetons.
 Exemple: Si E1→T1 avec poids 2, alors E1 doit avoir au moins 2 jetons pour que T1 soit franchissable.
 Fonctionnement:
 1. Parcourt tous les nœuds du réseau
