@@ -81,7 +81,7 @@ function App() {
 
 
 	return (
-		<>
+		<div className="w-screen h-screen">
 			{isDialogBoxOpen && (
 				<ChangeValueDialogBox
 					setDialogBoxIsOpen={setDialogBoxIsOpen}
@@ -110,11 +110,11 @@ function App() {
 					}
 				/>
 			)}
-			<div className='App px-16 py-4 space-y-4'>
+			<div className='App px-16 py-4 space-y-4 w-full'>
 				<div>
 					<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
 				</div>
-				<div className='Menu'>
+				<div className='Menu w-full'>
 					<div className='flex flex-row items-start space-x-4'>
 						<ButtonGroup>
 							<Button
@@ -544,7 +544,7 @@ function App() {
 				</div>
 				<Textarea placeholder="Results will be here." disabled value={result} className="w-full h-24" />
 			</div>
-		</>
+		</div>
 	);
 }
 
