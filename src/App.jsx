@@ -110,13 +110,13 @@ function App() {
 					}
 				/>
 			)}
-			<div className='App px-16 py-4 space-y-4 w-full'>
+			<div className='App px-16 py-4 space-y-4 w-full h-full'>
 				<div>
 					<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
 				</div>
 				<div className='Menu w-full'>
 					<div className='flex flex-row items-start space-x-4'>
-						<ButtonGroup>
+						<ButtonGroup className="flex flex-wrap gap-2">
 							<Button
 								className="bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
 								onClick={() => {
@@ -184,7 +184,7 @@ function App() {
 					</div>
 				</div>
 				<div
-					className='Canvas border border-gray-400 w-full h-[500px] bg-white rounded-2xl'
+					className='Canvas border border-gray-400 w-full h-8/12 bg-white rounded-2xl'
 					onMouseMove={(e) => {
 						const rect = e.currentTarget.getBoundingClientRect();
 						setMousePos({
