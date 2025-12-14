@@ -14,6 +14,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
 import { Hand, HandGrab, Eraser, Settings } from "lucide-react";
 
 function addPlace(setPlaces) {
@@ -72,10 +73,11 @@ function App() {
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
 
-
 	const selectedPlace = places.find((place) => place.id === selectedElement) || null;
 	const selectedArc = arcs.find((a) => a.id === selectedElement) || null;
 	const selectedTransition = transitions.find(t => t.id === selectedElement);
+
+	const [result, setResult] = useState("");
 
 
 	return (
@@ -158,8 +160,8 @@ function App() {
 								<DropdownMenuContent>
 									<DropdownMenuLabel>Simulation</DropdownMenuLabel>
 									<DropdownMenuSeparator />
-									<DropdownMenuItem onClick={() => { }}>X</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => { }}>Y</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => { setResult("Good") }}>X</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => { setResult("") }}>Y</DropdownMenuItem>
 									<DropdownMenuItem onClick={() => { }}>Z</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
@@ -481,6 +483,25 @@ function App() {
 							>
 								◉
 							</Button>
+							<Button
+								variant="outline"
+								className="absolute text-blue-500"
+								size="icon"
+								style={{
+									left:
+										(places.find(p => p.id === selectedArc.to) || transitions.find(t => t.id === selectedArc.to)).x,
+									top:
+										(places.find(p => p.id === selectedArc.to) || transitions.find(t => t.id === selectedArc.to)).y,
+								}}
+								onClick={() =>
+									setEditingArcEnd({
+										arcId: selectedArc.id,
+										end: "to",
+									})
+								}
+							>
+								◉
+							</Button>
 						</>
 					)}
 					{arcs.map((arc) => {
@@ -521,6 +542,7 @@ function App() {
 						);
 					})}
 				</div>
+				<Textarea placeholder="Results will be here." disabled value={result} className="w-full h-24" />
 			</div>
 		</>
 	);
