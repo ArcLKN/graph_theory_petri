@@ -67,6 +67,42 @@ function isBipartite(graph) {
 }
 
 /*
+marquageValide - Vérifie que le marquage du réseau de Pétri est valide
+Description: Parcourt tous les états (places) et transitions du réseau pour vérifier
+             que le nombre de ressources (jetons) associé à chacun est correct.
+             Un marquage est considéré valide si chaque valeur est un entier
+             et si elle est supérieure ou égale à 0.
+Importance: Essentielle pour garantir la cohérence du réseau avant une simulation,
+            car un marquage invalide peut produire des comportements impossibles
+            (ressources négatives ou non entières).
+Méthode: Vérifie pour chaque état et transition que la valeur associée est de type entier
+         (Number.isInteger) et qu’elle est >= 0.
+Retourne: booléen (true si tous les marquages sont valides, false sinon)
+Relations: Fonction de validation, utilisée avant le lancement de la simulation
+*/
+function marquageValide(reseau, etatDepart, valDepart) {
+
+  if (!reseau.hasOwnProperty(etatDepart)) {
+    return false;
+  }
+
+  if (!Number.isInteger(valDepart) || valDepart < 0) {
+    return false;
+  }
+
+  for (const noeud in reseau) {
+    const valeur = reseau[noeud][0];
+
+    if (!Number.isInteger(valeur) || valeur < 0) {
+      return false;
+    }
+  }
+
+  // Si toutes les vérifications passent
+  return true;
+}
+
+/*
 isConnex - Vérifie qu'il n'y a pas de parties du réseau isolées
 Description: Démarre d'un nœud et explore tous les voisins avec BFS. Si on peut atteindre tous les nœuds, le réseau est connexe.
 Importance: Crucial car un réseau avec des parties déconnectées ne peut pas fonctionner correctement.
@@ -593,7 +629,7 @@ lignes de test pour les fonctions => les enlever avant de push ou les rajouter s
 */
 
 
-export { reseau, isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
+export { reseau, isBipartite, marquageValide, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
 
 function reachable(from, to, graph) {
   const visited = new Set();
