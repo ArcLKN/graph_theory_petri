@@ -6,6 +6,14 @@ import {
 	ButtonGroupSeparator,
 	ButtonGroupText,
 } from "@/components/ui/button-group"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Hand, HandGrab, Eraser, Settings } from "lucide-react";
 
 function addPlace(setPlaces) {
@@ -83,53 +91,69 @@ function App() {
 				</div>
 				<div className='Menu'>
 					<div className='flex flex-row items-start space-x-4'>
-						<button
-							className='bg-gray-200'
-							onClick={() => {
-								setPlacingPlace(!placingPlace);
-							}}
-						>
-							Add Place
-						</button>
-						<button
-							className='bg-gray-200'
-							onClick={() => setPlacingTransition(!placingTransition)}
-						>
-							Add Transition
-						</button>
-						<button className='bg-gray-200' onClick={() => {
-							setCreatingArc(!creatingArc);
-							setArcStartId(null);
-						}
-						}>
-							Add Arc
-						</button>
-						<button className='bg-gray-200' onClick={null}>
-							Add Annotation
-						</button>
-						<button
-							className='bg-blue-300 '
-							onClick={() => setDoSimulation(!doSimulation)}
-						>
-							{doSimulation
-								? "Stop Simulation"
-								: "Start Simulation"}
-						</button>
-						<button className='bg-red-300' onClick={null}>
-							Delete Element
-						</button>
-						<button className='bg-red-400' onClick={() => {
-							setArcs([]);
-						}}>
-							Delete Arcs
-						</button>
-						<button className='bg-red-400' onClick={() => {
-							setPlaces([]);
-							setArcs([]);
-							setTransitions([]);
-						}}>
-							Delete All
-						</button>
+						<ButtonGroup>
+							<Button
+								className="bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+								onClick={() => {
+									setPlacingPlace(!placingPlace);
+								}}
+							>
+								Add Place
+							</Button>
+							<Button
+								className="bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+								onClick={() => setPlacingTransition(!placingTransition)}
+							>
+								Add Transition
+							</Button>
+							<Button
+								className="bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+								onClick={() => {
+									setCreatingArc(!creatingArc);
+									setArcStartId(null);
+								}
+								}>
+								Add Arc
+							</Button>
+							<Button
+								className="bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+								onClick={null}>
+								Add Annotation
+							</Button>
+							<Button
+								className='bg-blue-300 text-foreground hover:bg-blue-400  hover:text-accent-foreground'
+								onClick={() => setDoSimulation(!doSimulation)}
+							>
+								{doSimulation
+									? "Stop Simulation"
+									: "Start Simulation"}
+							</Button>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild><Button variant="outline" className="bg-blue-300 text-foreground hover:bg-blue-400  hover:text-accent-foreground">More</Button></DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuLabel>Simulation</DropdownMenuLabel>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem onClick={() => { }}>X</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => { }}>Y</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => { }}>Z</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+							<Button className='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground' onClick={null}>
+								Delete Element
+							</Button>
+							<Button className='bg-red-400 text-foreground hover:bg-red-500 hover:text-accent-foreground' onClick={() => {
+								setArcs([]);
+							}}>
+								Delete Arcs
+							</Button>
+							<Button className='bg-red-400 text-foreground hover:bg-red-500 hover:text-accent-foreground' onClick={() => {
+								setPlaces([]);
+								setArcs([]);
+								setTransitions([]);
+							}}>
+								Delete All
+							</Button>
+						</ButtonGroup>
 					</div>
 				</div>
 				<div
