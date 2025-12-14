@@ -362,3 +362,66 @@ lignes de test pour les fonctions => les enlever avant de push ou les rajouter s
 
 
 export { reseau, isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
+
+function reachable(from, to, graph) {
+  const visited = new Set();
+  const queue = [from];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === to) return true;
+
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    (graph[current] || []).forEach(next => queue.push(next));
+  }
+  return false;
+}
+
+function isLive(initialReseau) {
+  // 1. Construire le graphe d’atteignabilité
+  const graph = buildReachabilityGraph(initialReseau);
+  const markings = Object.keys(graph);
+
+  // 2. Pour chaque marquage atteignable
+  for (const M of markings) {
+
+    // Reconstruire un réseau avec ce marquage
+    for (const transition in initialReseau) {
+      if (!transition.startsWith("T")) continue;
+
+      let transitionVivante = false;
+
+      // 3. Chercher un futur où la transition est franchissable
+      for (const M2 of markings) {
+        if (reachable(M, M2, graph)) {
+
+          // Recréer le réseau correspondant à M2
+          const reseauM2 = JSON.parse(JSON.stringify(initialReseau));
+          const tokens = M2.split(",").map(Number);
+
+          let i = 0;
+          for (const node in reseauM2) {
+            if (node.startsWith("E")) {
+              reseauM2[node][0] = tokens[i++];
+            }
+          }
+
+          if (isEnabled(reseauM2, transition)) {
+            transitionVivante = true;
+            break;
+          }
+        }
+      }
+
+      // 4. Transition morte → réseau non vivant
+      if (!transitionVivante) {
+        return false;
+      }
+    }
+  }
+
+  // 5. Toutes les transitions sont vivantes
+  return true;
+}
