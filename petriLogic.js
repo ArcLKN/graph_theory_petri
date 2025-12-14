@@ -510,6 +510,84 @@ function isInvariantConservation(graph, maxStates = 1000) {
 }
 
 /*
+tarjan - Algorithme de Tarjan pour trouver les composantes fortement connexes
+Description: Identifie tous les sous-graphes fortement connexes (SCCs) en utilisant DFS avec indices.
+Un sous-graphe fortement connexe est un ensemble maximal de nœuds où chaque nœud peut atteindre tous les autres.
+Structure: Fonction principale avec fonction auxiliaire strongconnect interne (closure).
+Algorithme en temps linéaire O(V+E) optimal pour identifier les SCCs.
+Fonctionnement:
+1. Initialise index = 0, stack vide, nodeData pour stocker index/lowlink/onStack
+2. Pour chaque nœud v non visité du graphe :
+   - Appelle strongconnect(v) qui explore récursivement
+3. strongconnect(v) :
+   - Assigne index et lowlink au nœud
+   - Empile le nœud (onStack = true)
+   - Explore chaque successeur w :
+     * Si w non visité : recurse, puis v.lowlink = min(v.lowlink, w.lowlink)
+     * Si w dans pile : v.lowlink = min(v.lowlink, w.index) [arc de retour]
+   - Si v.lowlink == v.index : v est racine d'une SCC
+     * Dépile tous les nœuds jusqu'à v → forme une SCC complète
+4. Retourne tableau de SCCs (chaque SCC = tableau de nœuds)
+Méthode: DFS avec pile et lowlink pour détecter les racines de SCCs.
+Paramètres: graph (réseau de Petri)
+Retourne: tableau de tableaux (chaque sous-tableau = une SCC avec ses nœuds)
+Relations: Fonction d'analyse structurelle avancée. Détecte les cycles et la modularité du réseau.
+*/
+function tarjan(graph) {
+    const nodes = Object.keys(graph);
+    let index = 0;
+    const stack = [];
+    const nodeData = {};
+    const sccs = [];
+    
+    for (const noeud of nodes) {
+        nodeData[noeud] = {
+            index: undefined,
+            lowlink: undefined,
+            onStack: false
+        };
+    }
+    
+    function strongconnect(v) {
+        nodeData[v].index = index;
+        nodeData[v].lowlink = index;
+        index++;
+        stack.push(v);
+        nodeData[v].onStack = true;
+        
+        const successeurs = graph[v].slice(1).map(arc => arc[0]);
+        
+        for (const w of successeurs) {
+            if (nodeData[w].index === undefined) {
+                strongconnect(w);
+                nodeData[v].lowlink = Math.min(nodeData[v].lowlink, nodeData[w].lowlink);
+            } else if (nodeData[w].onStack) {
+                nodeData[v].lowlink = Math.min(nodeData[v].lowlink, nodeData[w].index);
+            }
+        }
+        
+        if (nodeData[v].lowlink === nodeData[v].index) {
+            const scc = [];
+            let w;
+            do {
+                w = stack.pop();
+                nodeData[w].onStack = false;
+                scc.push(w);
+            } while (w !== v);
+            sccs.push(scc);
+        }
+    }
+    
+    for (const v of nodes) {
+        if (nodeData[v].index === undefined) {
+            strongconnect(v);
+        }
+    }
+    
+    return sccs;
+}
+
+/*
 lignes de test pour les fonctions => les enlever avant de push ou les rajouter si faire test
 + décommenter la ligne export
 */
