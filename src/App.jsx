@@ -23,15 +23,15 @@ function addPlace(setPlaces) {
 function addTransition(setTransitions, mousePos) {
 	// Logic to add a transition to the Pétri Network
 	setTransitions((prevTransitions) => [
-    ...prevTransitions,
-    {
-      id: Date.now(),
-      x: mousePos.x - 20, // Ajuste pour centrer le rectangle
-      y: mousePos.y - 30,
-      width: 20, // largeur du rectangle
-      height: 60, // hauteur du rectangle
-    },
-  ]);
+		...prevTransitions,
+		{
+			id: Date.now(),
+			x: mousePos.x - 20, // Ajuste pour centrer le rectangle
+			y: mousePos.y - 30,
+			width: 20, // largeur du rectangle
+			height: 60, // hauteur du rectangle
+		},
+	]);
 }
 
 function addArc() {
@@ -91,7 +91,7 @@ function App() {
 						</button>
 						<button
 							className='bg-gray-200'
-							onClick={() => setPlacingTransition(true)}
+							onClick={() => setPlacingTransition(!true)}
 						>
 							Add Transition
 						</button>
@@ -223,8 +223,8 @@ function App() {
 								stroke="black"
 								strokeWidth="2"
 								onClick={(e) => {
-								e.stopPropagation(); // empêche de déclencher le click du canvas
-								setSelectedElement(transition.id);
+									e.stopPropagation(); // empêche de déclencher le click du canvas
+									setSelectedElement(transition.id);
 								}}
 							/>
 						))}
