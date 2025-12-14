@@ -356,6 +356,238 @@ function simulation(reseau, transitionId) {
 }
 
 /*
+isInvariantTransitions - Vérifie qu'il existe une séquence de transitions qui ramène au marquage initial
+Description: Explore l'espace d'états pour trouver un cycle qui revient au marquage de départ.
+Un invariant de transitions signifie qu'on peut tirer des transitions et revenir exactement à l'état initial.
+Exemple: Si on tire T1, puis T2, puis T3 et qu'on retrouve le marquage initial → invariant existe.
+Fonctionnement:
+1. Sauvegarde le marquage initial comme référence
+2. Utilise BFS pour explorer l'espace d'états en tirant toutes les transitions possibles
+3. Pour chaque nouveau marquage atteint, vérifie s'il correspond au marquage initial
+4. Garde trace de la profondeur (nombre de tirs) pour éviter le marquage initial trivial (0 tirs)
+5. Si on retrouve le marquage initial après au moins 1 tir → retourne true (invariant existe)
+6. Si exploration complète sans trouver de cycle → retourne false
+Méthode: BFS avec queue de paires (marquage, profondeur). Limite à maxDepth tirs pour éviter explosion combinatoire.
+Paramètres: graph (réseau), maxDepth (profondeur max d'exploration, défaut=20)
+Retourne: booléen (true si invariant trouvé, false sinon)
+Relations: Fonction d'analyse avancée. Utilise calculNouveauMarquage pour simulations hypothétiques.
+*/
+function isInvariantTransitions(graph, maxDepth = 20) {
+    const marquageInitial_ref = marquageInitial(graph);
+    const marquageInitialStr = JSON.stringify(marquageInitial_ref);
+    
+    const queue = [[marquageInitial_ref, 0]];
+    const visites = new Set();
+    visites.add(marquageInitialStr + "_0");
+    
+    while (queue.length > 0) {
+        const [marquageActuel, profondeur] = queue.shift();
+        
+        if (profondeur >= maxDepth) {
+            continue;
+        }
+        
+        for (const transition in graph) {
+            if (transition.startsWith("T")) {
+                let peutTirer = true;
+                for (const etat in graph) {
+                    if (etat.startsWith("E")) {
+                        let total_poids = 0;
+                        const arcs = graph[etat].slice(1);
+                        for (const arc of arcs) {
+                            const [destination, poids] = arc;
+                            if (destination === transition) {
+                                total_poids += poids;
+                            }
+                        }
+                        if (total_poids > 0 && marquageActuel[etat] < total_poids) {
+                            peutTirer = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (peutTirer) {
+                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, graph);
+                    const nouveauMarquageStr = JSON.stringify(nouveauMarquage);
+                    
+                    if (nouveauMarquageStr === marquageInitialStr && profondeur > 0) {
+                        return true;
+                    }
+                    
+                    const stateKey = nouveauMarquageStr + "_" + (profondeur + 1);
+                    if (!visites.has(stateKey)) {
+                        visites.add(stateKey);
+                        queue.push([nouveauMarquage, profondeur + 1]);
+                    }
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
+/*
+isInvariantConservation - Vérifie que le nombre total de jetons reste constant
+Description: Un invariant de conservation (P-invariant) signifie qu'aucune transition ne crée ni ne détruit de jetons.
+Les jetons circulent uniquement, le total reste toujours identique au total initial.
+Exemple conservatif: E1(5) --1--> T1 --1--> E2(0). Total avant = 5, total après = 5 ✓
+Exemple non-conservatif: E1(5) --2--> T1 --1--> E2(0). T1 consomme 2, produit 1 → perte nette ✗
+Fonctionnement:
+1. Calcule le nombre total de jetons au marquage initial
+2. Utilise BFS pour explorer l'espace d'états en tirant toutes les transitions possibles
+3. Pour chaque nouveau marquage atteint, calcule le total de jetons
+4. Si un marquage a un total différent du total initial → retourne false immédiatement
+5. Si tous les marquages explorés ont le même total → retourne true
+Méthode: BFS avec vérification du total à chaque étape. Limite à maxStates marquages pour performances.
+Conditions de conservation: Pour chaque transition T, somme(poids_entrées) = somme(poids_sorties)
+Paramètres: graph (réseau), maxStates (nombre max de marquages à explorer, défaut=1000)
+Retourne: booléen (true si conservation respectée, false si création/destruction détectée)
+Relations: Fonction d'analyse de propriété structurelle. Utilise calculNouveauMarquage pour simulations.
+*/
+function isInvariantConservation(graph, maxStates = 1000) {
+    const marquageInitial_ref = marquageInitial(graph);
+    
+    let totalInitial = 0;
+    for (const etat in marquageInitial_ref) {
+        totalInitial += marquageInitial_ref[etat];
+    }
+    
+    const queue = [marquageInitial_ref];
+    const visites = new Set();
+    visites.add(JSON.stringify(marquageInitial_ref));
+    
+    let compteur = 0;
+    
+    while (queue.length > 0 && compteur < maxStates) {
+        const marquageActuel = queue.shift();
+        compteur++;
+        
+        let totalActuel = 0;
+        for (const etat in marquageActuel) {
+            totalActuel += marquageActuel[etat];
+        }
+        
+        if (totalActuel !== totalInitial) {
+            return false;
+        }
+        
+        for (const transition in graph) {
+            if (transition.startsWith("T")) {
+                let peutTirer = true;
+                for (const etat in graph) {
+                    if (etat.startsWith("E")) {
+                        let total_poids = 0;
+                        const arcs = graph[etat].slice(1);
+                        for (const arc of arcs) {
+                            const [destination, poids] = arc;
+                            if (destination === transition) {
+                                total_poids += poids;
+                            }
+                        }
+                        if (total_poids > 0 && marquageActuel[etat] < total_poids) {
+                            peutTirer = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (peutTirer) {
+                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, graph);
+                    const marquageStr = JSON.stringify(nouveauMarquage);
+                    
+                    if (!visites.has(marquageStr)) {
+                        visites.add(marquageStr);
+                        queue.push(nouveauMarquage);
+                    }
+                }
+            }
+        }
+    }
+    
+    return true;
+}
+
+/*
+tarjan - Algorithme de Tarjan pour trouver les composantes fortement connexes
+Description: Identifie tous les sous-graphes fortement connexes (SCCs) en utilisant DFS avec indices.
+Un sous-graphe fortement connexe est un ensemble maximal de nœuds où chaque nœud peut atteindre tous les autres.
+Structure: Fonction principale avec fonction auxiliaire strongconnect interne (closure).
+Algorithme en temps linéaire O(V+E) optimal pour identifier les SCCs.
+Fonctionnement:
+1. Initialise index = 0, stack vide, nodeData pour stocker index/lowlink/onStack
+2. Pour chaque nœud v non visité du graphe :
+   - Appelle strongconnect(v) qui explore récursivement
+3. strongconnect(v) :
+   - Assigne index et lowlink au nœud
+   - Empile le nœud (onStack = true)
+   - Explore chaque successeur w :
+     * Si w non visité : recurse, puis v.lowlink = min(v.lowlink, w.lowlink)
+     * Si w dans pile : v.lowlink = min(v.lowlink, w.index) [arc de retour]
+   - Si v.lowlink == v.index : v est racine d'une SCC
+     * Dépile tous les nœuds jusqu'à v → forme une SCC complète
+4. Retourne tableau de SCCs (chaque SCC = tableau de nœuds)
+Méthode: DFS avec pile et lowlink pour détecter les racines de SCCs.
+Paramètres: graph (réseau de Petri)
+Retourne: tableau de tableaux (chaque sous-tableau = une SCC avec ses nœuds)
+Relations: Fonction d'analyse structurelle avancée. Détecte les cycles et la modularité du réseau.
+*/
+function tarjan(graph) {
+    const nodes = Object.keys(graph);
+    let index = 0;
+    const stack = [];
+    const nodeData = {};
+    const sccs = [];
+    
+    for (const noeud of nodes) {
+        nodeData[noeud] = {
+            index: undefined,
+            lowlink: undefined,
+            onStack: false
+        };
+    }
+    
+    function strongconnect(v) {
+        nodeData[v].index = index;
+        nodeData[v].lowlink = index;
+        index++;
+        stack.push(v);
+        nodeData[v].onStack = true;
+        
+        const successeurs = graph[v].slice(1).map(arc => arc[0]);
+        
+        for (const w of successeurs) {
+            if (nodeData[w].index === undefined) {
+                strongconnect(w);
+                nodeData[v].lowlink = Math.min(nodeData[v].lowlink, nodeData[w].lowlink);
+            } else if (nodeData[w].onStack) {
+                nodeData[v].lowlink = Math.min(nodeData[v].lowlink, nodeData[w].index);
+            }
+        }
+        
+        if (nodeData[v].lowlink === nodeData[v].index) {
+            const scc = [];
+            let w;
+            do {
+                w = stack.pop();
+                nodeData[w].onStack = false;
+                scc.push(w);
+            } while (w !== v);
+            sccs.push(scc);
+        }
+    }
+    
+    for (const v of nodes) {
+        if (nodeData[v].index === undefined) {
+            strongconnect(v);
+        }
+    }
+    
+    return sccs;
+}
+
+/*
 lignes de test pour les fonctions => les enlever avant de push ou les rajouter si faire test
 + décommenter la ligne export
 */
