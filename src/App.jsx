@@ -57,13 +57,15 @@ function App() {
 
 	const [arcs, setArcs] = useState([]);
 	const [creatingArc, setCreatingArc] = useState(false);
-	const [arcStartPlaceId, setArcStartPlaceId] = useState(null);
+	const [arcStartId, setArcStartId] = useState(null);
+	const [arcStartType, setArcStartType] = useState(null);
 	const [editingArcEnd, setEditingArcEnd] = useState(null);
 
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
 
 	const selectedArc = arcs.find((a) => a.id === selectedElement) || null;
+	const selectedTransition = transitions.find(t => t.id === selectedElement);
 
 
 	return (
@@ -97,7 +99,7 @@ function App() {
 						</button>
 						<button className='bg-gray-200' onClick={() => {
 							setCreatingArc(!creatingArc);
-							setArcStartPlaceId(null);
+							setArcStartId(null);
 						}
 						}>
 							Add Arc
@@ -140,9 +142,8 @@ function App() {
 						});
 					}}
 					onClick={() => {
-						if (
-							movingPlaceId
-						) {
+						if (movingPlaceId) {
+							console.log("Moving place:", movingPlaceId);
 							setPlaces((prev) =>
 								prev.map((place) =>
 									place.id === movingPlaceId
@@ -152,6 +153,17 @@ function App() {
 											y: mousePos.y - 16,
 										}
 										: place
+								)
+							);
+							setTransitions((prev) =>
+								prev.map((transition) =>
+									transition.id === movingPlaceId
+										? {
+											...transition,
+											x: mousePos.x - 16,
+											y: mousePos.y - 16,
+										}
+										: transition
 								)
 							);
 							setMovingPlaceId(null);
@@ -178,9 +190,22 @@ function App() {
 				>
 					{/* Canvas for drawing Pétri Network will go here */}
 					<svg className="absolute inset-0 w-full h-full pointer-events-none">
+						<defs>
+							<marker
+								id="arrow"
+								markerWidth="10"
+								markerHeight="10"
+								refX="20"
+								refY="5"
+								orient="auto"
+								markerUnits="strokeWidth"
+							>
+								<path d="M 0 0 L 10 5 L 0 10 z" fill="black" />
+							</marker>
+						</defs>
 						{arcs.map((arc) => {
-							const fromPlace = places.find((p) => p.id === arc.from);
-							const toPlace = places.find((p) => p.id === arc.to);
+							const fromPlace = places.find(p => p.id === arc.from) || transitions.find(t => t.id === arc.from);
+							const toPlace = places.find(p => p.id === arc.to) || transitions.find(t => t.id === arc.to);
 							if (!fromPlace || !toPlace) return null;
 
 							return (<line
@@ -196,11 +221,12 @@ function App() {
 									console.log("Arc clicked:", arc.id);
 									setSelectedElement(arc.id);
 								}}
+								markerEnd="url(#arrow)"
 							/>);
 						})}
-						{creatingArc && arcStartPlaceId && (
+						{creatingArc && arcStartId && (
 							(() => {
-								const fromPlace = places.find((p) => p.id === arcStartPlaceId);
+								const fromPlace = places.find(p => p.id === arcStartId) || transitions.find(t => t.id === arcStartId);
 								if (!fromPlace) return null;
 								return (<line
 									x1={fromPlace.x + 16}
@@ -222,9 +248,32 @@ function App() {
 								fill={selectedElement === transition.id ? "blue" : "gray"}
 								stroke="black"
 								strokeWidth="2"
-								onClick={(e) => {
-									e.stopPropagation(); // empêche de déclencher le click du canvas
-									setSelectedElement(transition.id);
+								pointerEvents="all"
+								onClick={() => {
+
+									if (!creatingArc) {
+										setSelectedElement(selectedElement === transition.id ? null : transition.id);
+										return;
+									}
+
+									// Arc creation logic
+									if (!arcStartId) {
+										setArcStartId(transition.id);
+										setArcStartType("transition");
+									} else if (arcStartType === "place") {
+										setArcs((prev) => [
+											...prev,
+											{
+												id: Date.now(),
+												from: arcStartId,
+												to: transition.id,
+											},
+										]);
+										setCreatingArc(false);
+										setArcStartId(null);
+										setArcStartType(null);
+										return;
+									}
 								}}
 							/>
 						))}
@@ -242,12 +291,20 @@ function App() {
 						)}
 					</svg>
 
-					{(placingPlace || movingPlaceId) && (
+					{(placingPlace || movingPlaceId && !selectedTransition) ? (
 						<div
 							className='absolute w-8 h-8 rounded-full border-2 border-dashed border-black bg-white opacity-70 pointer-events-none'
 							style={{
 								left: mousePos.x - 16,
 								top: mousePos.y - 16,
+							}}
+						/>
+					) : movingPlaceId && selectedTransition && (
+						<div
+							className='absolute w-5 h-15 rounded border-2 border-dashed border-black bg-white opacity-70 pointer-events-none'
+							style={{
+								left: mousePos.x - 10,
+								top: mousePos.y - 30,
 							}}
 						/>
 					)}
@@ -302,33 +359,56 @@ function App() {
 									}`}
 								style={{ left: place.x, top: place.y }}
 								onClick={() => {
-									if (creatingArc && arcStartPlaceId === null) {
-										setArcStartPlaceId(place.id);
+									if (!creatingArc) {
+										setSelectedElement(selectedElement === place.id ? null : place.id);
 										return;
 									}
 
-									if (creatingArc && arcStartPlaceId !== null) {
-										if (place.id !== arcStartPlaceId) {
-											setArcs((prev) => [
-												...prev,
-												{
-													id: Date.now(),
-													from: arcStartPlaceId,
-													to: place.id,
-												},
-											]);
-										}
+									// Arc creation logic
+									if (!arcStartId) {
+										setArcStartId(place.id);
+										setArcStartType("place");
+									} else if (arcStartType === "transition") {
+										setArcs((prev) => [
+											...prev,
+											{
+												id: Date.now(),
+												from: arcStartId,
+												to: place.id,
+											},
+										]);
 
 										setCreatingArc(false);
-										setArcStartPlaceId(null);
+										setArcStartId(null);
+										setArcStartType(null);
 										return;
 									}
-
-									setSelectedElement(selectedElement === place.id ? null : place.id);
 								}}
 							><p className="text-white pointer-events-none">{place.value}</p></div>
 						</div>
 					))}
+					{
+						selectedTransition && (
+							<Button
+								variant="outline"
+								size="icon"
+								className="absolute"
+								style={{
+									left: selectedTransition.x - 10,
+									top: selectedTransition.y - 50,
+								}}
+								onClick={() => {
+									setMovingPlaceId(
+										movingPlaceId === selectedTransition.id ? null : selectedTransition.id
+									);
+								}}
+							>
+								{
+									movingPlaceId === selectedTransition.id ? <HandGrab /> : <Hand />
+								}
+							</Button>
+						)
+					}
 					{selectedArc && (
 						<>
 							<Button
