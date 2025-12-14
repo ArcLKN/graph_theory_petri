@@ -91,7 +91,7 @@ function App() {
 						</button>
 						<button
 							className='bg-gray-200'
-							onClick={() => setPlacingTransition(!true)}
+							onClick={() => setPlacingTransition(!placingTransition)}
 						>
 							Add Transition
 						</button>
