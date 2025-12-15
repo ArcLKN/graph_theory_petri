@@ -341,7 +341,9 @@ function App() {
 									y2={toPlace.y + 16}
 									stroke='black'
 									strokeWidth={2}
-									markerEnd='url(#arrow)'
+									markerEnd={
+										isOriented ? "url(#arrow)" : null
+									}
 									pointerEvents='none'
 								/>
 							</g>
