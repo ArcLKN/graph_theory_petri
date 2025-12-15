@@ -54,7 +54,7 @@ function addArc() {
 	// Logic to add an arc to the Pétri Network
 }
 
- function addAnnotation() {
+function addAnnotation() {
 	// Logic to add an annotation to the Pétri Network
 	setTransitions((prevTransitions) => [
 		...prevTransitions,
@@ -341,7 +341,6 @@ function App() {
 								strokeWidth='2'
 								pointerEvents='stroke'
 								onClick={() => {
-									console.log("Arc clicked:", arc.id);
 									setSelectedElement(arc.id);
 								}}
 								markerEnd='url(#arrow)'
