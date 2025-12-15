@@ -20,6 +20,14 @@ import {
 	isDeadlock,
 	isBorne,
 	simulation,
+	isInvariantTransitions,
+	isInvariantConservation,
+	tarjan,
+	puits,
+	sources,
+	estSimple,
+	DFS,
+	isLive
 } from "../petriLogic.js";
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";

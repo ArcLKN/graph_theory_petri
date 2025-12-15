@@ -757,4 +757,6 @@ function simulation(transitionId) {
     }
 }
 
-export { isBipartite, marquageValide, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
+export { isBipartite, marquageValide, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation,
+    isInvariantTransitions, isInvariantConservation, tarjan, puits, sources, estSimple, DFS, isLive
+ };
