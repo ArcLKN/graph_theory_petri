@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
 import { Hand, HandGrab, Eraser, Settings } from "lucide-react";
-import { transformationIn,formatReseau } from "../canvaToDic.js";
+import { transformationIn, formatReseau, transformationOut } from "../canvaToDic.js";
+import { isBipartite, marquageValide, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation } from "../petriLogic.js";
+import {reseau, etatDepart, valDepart} from "../varGlobales.js"
 
 function addPlace(setPlaces) {
 	// Logic to add a place to the Pétri Network
@@ -81,13 +83,47 @@ function App() {
 	const [result, setResult] = useState("");
 
 	/////////// Gabriel ///////////
-	//fonction pour envoyer les places,transitions,arcs au canvaToDic.js
-	const handleTransformation = () => {
+	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
+	const handleTransformationIn = () => {
 		const res = transformationIn(places, transitions, arcs);
 		const formatted = formatReseau(res);
 		console.log(formatted);
 		setResult(formatted);
   	};
+
+	// Fonction pour lancer la simulation après transformation et vérification
+	const handleSimulation = () => {
+    	// transformation en dictionnaire
+    	handleTransformationIn();
+
+    	// vérification bipartite
+		const marquage = marquageValide();
+		if (!marquage) {
+    	    setResult("erreur: Le réseau n'est pas valide ! (transition < 0 ou jeton d'un état n'est pas un nombre)");
+    	    return;
+	    }
+
+    	const bipartite = isBipartite();
+    	if (!bipartite) {
+    	    setResult("erreur: Deux Transitions ou deux Etats connectés ensemble !");
+    	    return;
+	    }
+
+		const connex = isConnex();
+    	if (!connex) {
+    	    setResult("erreur: Le réseau n'est pas connex !");
+    	    return;
+	    }
+
+	    // lancer la simulation pour toutes les transitions
+	    Object.keys(reseau).forEach(node => {
+	        if (node.startsWith("T")) {
+	            simulation(node);
+	        }
+	    });
+
+		transformationOut(places, transitions, arcs);
+	};
 	/////////////////////////////
 
 	return (
@@ -157,7 +193,7 @@ function App() {
 							</Button>
 							<Button
 								className='bg-blue-300 text-foreground hover:bg-blue-400  hover:text-accent-foreground'
-								onClick={() => setDoSimulation(!doSimulation)}
+								onClick={handleSimulation}
 							>
 								{doSimulation
 									? "Stop Simulation"
@@ -172,7 +208,7 @@ function App() {
 									<DropdownMenuSeparator />
 									<DropdownMenuItem onClick={() => { setResult("Good") }}>X</DropdownMenuItem>
 									<DropdownMenuItem onClick={() => { setResult("") }}>Y</DropdownMenuItem>
-									<DropdownMenuItem onClick={handleTransformation}>Transformer le réseau</DropdownMenuItem>
+									<DropdownMenuItem onClick={handleTransformationIn}>Transformer le réseau</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
 							<Button className='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground' onClick={null}>
