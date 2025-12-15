@@ -278,23 +278,23 @@ function App() {
 	};
 	/////////////////////////////
 
-	const handleDeadlock = () => {
-
-		const deadlock = isDeadlock();
-		if (!deadlock){
-			setResult("Pas de Deadlock détecté");
-		} 
-		else (setResult("Toutes les transitions sont infranchissables --> Deadlock situation"))
-		return;
-	}
-
 	const handleBorne = () => {
 
 		const borne = isBorne();
-		if (!borne){
-			setResult("Le réseau dépasse la borne --> k-borné dépassé");
+		if(!borne){
+			setResult("Dépassement de borne");
 		}
-		else (setResult("Le réseau ne dépasse pas la borne --> bien k-borné"))
+		else (setResult("On est bien k-borné"))
+		return;
+	}
+
+	const handleDeadlock = () => {
+
+		const deadlock = isDeadlock();
+		if(!deadlock){
+			setResult("pas de deadlock");
+		}
+		else (setResult("deadlock situation"))
 		return;
 	}
 
@@ -334,12 +334,9 @@ function App() {
 				handleTransformationIn={handleTransformationIn}
 				setIsOrientedGraph={setIsOriented}
 				isOrientedGraph={isOriented}
-<<<<<<< HEAD
 				placingPlace={placingPlace}
-=======
-				handleDeadlock={handleDeadlock}
 				handleBorne={handleBorne}
->>>>>>> recover-deadlock
+				handleDeadlock={handleDeadlock}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}
