@@ -304,6 +304,7 @@ function App() {
 				handleTransformationIn={handleTransformationIn}
 				setIsOrientedGraph={setIsOriented}
 				isOrientedGraph={isOriented}
+				placingPlace={placingPlace}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}

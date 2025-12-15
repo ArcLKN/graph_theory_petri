@@ -21,6 +21,7 @@ export default function EditorToolbar({
 	handleDeleteAll,
 	setIsOrientedGraph,
 	isOrientedGraph,
+	placingPlace,
 }) {
 	return (
 		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
@@ -28,7 +29,10 @@ export default function EditorToolbar({
 				<ButtonGroup className='flex flex-wrap gap-2'>
 					{/* Action Buttons */}
 					<Button
-						className={actionButtonClass}
+						className={
+							`${placingPlace ? "bg-orange-300" : ""}` +
+							actionButtonClass
+						}
 						onClick={handleAddPlace}
 					>
 						Add Place
