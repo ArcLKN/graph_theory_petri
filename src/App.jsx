@@ -529,28 +529,47 @@ function App() {
 					</div>
 				))}
 				{selectedTransition && (
-					<Button
-						variant='outline'
-						size='icon'
+					<ButtonGroup
 						className='absolute'
 						style={{
 							left: selectedTransition.x - 10,
 							top: selectedTransition.y - 50,
 						}}
-						onClick={() => {
-							setMovingPlaceId(
-								movingPlaceId === selectedTransition.id
-									? null
-									: selectedTransition.id
-							);
-						}}
 					>
-						{movingPlaceId === selectedTransition.id ? (
-							<HandGrab />
-						) : (
-							<Hand />
-						)}
-					</Button>
+						<Button
+							variant='outline'
+							size='icon'
+							onClick={() => {
+								setMovingPlaceId(
+									movingPlaceId === selectedTransition.id
+										? null
+										: selectedTransition.id
+								);
+							}}
+						>
+							{movingPlaceId === selectedTransition.id ? (
+								<HandGrab />
+							) : (
+								<Hand />
+							)}
+						</Button>
+						<Button
+							variant='outline'
+							className='bg-red-300 hover:bg-red-300'
+							size='icon'
+							onClick={() => {
+								// Delete arc
+								setTransitions((prev) =>
+									prev.filter(
+										(a) => a.id !== selectedTransition.id
+									)
+								);
+								setSelectedElement(null);
+							}}
+						>
+							<Eraser />
+						</Button>
+					</ButtonGroup>
 				)}
 				{selectedArc && (
 					<>
