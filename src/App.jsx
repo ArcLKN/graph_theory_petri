@@ -6,6 +6,7 @@ import {
 	ButtonGroupSeparator,
 	ButtonGroupText,
 } from "@/components/ui/button-group";
+
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -53,10 +54,10 @@ function addTransition(setTransitions, mousePos) {
 		...prevTransitions,
 		{
 			id: Date.now(),
-			x: mousePos.x - 20, // Ajuste pour centrer le rectangle
+			x: mousePos.x - 20,
 			y: mousePos.y - 30,
-			width: 20, // largeur du rectangle
-			height: 60, // hauteur du rectangle
+			width: 20,
+			height: 60,
 		},
 	]);
 }
@@ -65,8 +66,18 @@ function addArc() {
 	// Logic to add an arc to the Pétri Network
 }
 
-function addAnnotation() {
+ function addAnnotation() {
 	// Logic to add an annotation to the Pétri Network
+	setTransitions((prevTransitions) => [
+		...prevTransitions,
+		{
+			id: Date.now(),
+			x: mousePos.x - 20,
+			y: mousePos.y - 30,
+			width: 20,
+			height: 60,
+		},
+	]);
 }
 
 function App() {
@@ -81,6 +92,10 @@ function App() {
 	const [placingPlace, setPlacingPlace] = useState(false);
 	const [places, setPlaces] = useState([]);
 	const [movingPlaceId, setMovingPlaceId] = useState(null);
+
+	const [placingAnnotation, setPlacingAnnotation] = useState(false);
+	const [annotations, setAnnotations] = useState([]);
+	const [movingAnnotationId, setMovingAnnotationId] = useState(null);
 
 	const [arcs, setArcs] = useState([]);
 	const [creatingArc, setCreatingArc] = useState(false);
