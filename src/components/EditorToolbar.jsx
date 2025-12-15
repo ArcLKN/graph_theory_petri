@@ -21,6 +21,8 @@ export default function EditorToolbar({
 	handleDeleteAll,
 	setIsOrientedGraph,
 	isOrientedGraph,
+	handleDeadlock,
+	handleBorne,
 }) {
 	return (
 		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
@@ -62,6 +64,8 @@ export default function EditorToolbar({
 					<SimulationMenu
 						setResult={setResult}
 						handleTransformationIn={handleTransformationIn}
+						handleDeadlock = {handleDeadlock}
+						handleBorne={handleBorne}
 					/>
 
 					<ButtonGroupSeparator />
