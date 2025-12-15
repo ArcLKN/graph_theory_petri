@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
 import { Hand, HandGrab, Eraser, Settings } from "lucide-react";
+import { transformationIn,formatReseau } from "../canvaToDic.js";
 
 function addPlace(setPlaces) {
 	// Logic to add a place to the Pétri Network
@@ -79,6 +80,15 @@ function App() {
 
 	const [result, setResult] = useState("");
 
+	/////////// Gabriel ///////////
+	//fonction pour envoyer les places,transitions,arcs au canvaToDic.js
+	const handleTransformation = () => {
+		const res = transformationIn(places, transitions, arcs);
+		const formatted = formatReseau(res);
+		console.log(formatted);
+		setResult(formatted);
+  	};
+	/////////////////////////////
 
 	return (
 		<div className="w-screen h-screen">
@@ -162,7 +172,7 @@ function App() {
 									<DropdownMenuSeparator />
 									<DropdownMenuItem onClick={() => { setResult("Good") }}>X</DropdownMenuItem>
 									<DropdownMenuItem onClick={() => { setResult("") }}>Y</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => { }}>Z</DropdownMenuItem>
+									<DropdownMenuItem onClick={handleTransformation}>Transformer le réseau</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
 							<Button className='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground' onClick={null}>
