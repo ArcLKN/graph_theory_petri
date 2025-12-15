@@ -192,12 +192,15 @@ function App() {
 
 			<EditorToolbar
 				doSimulation={doSimulation}
-				onAddPlace={handleAddPlace}
-				onAddTransition={handleAddTransition}
-				onAddArc={handleAddArc}
-				onSimulate={handleSimulation}
-				onDeleteAll={handleDeleteAll}
+				handleAddPlace={handleAddPlace}
+				handleAddTransition={handleAddTransition}
+				handleAddArc={handleAddArc}
+				handleSimulation={handleSimulation}
+				handleDeleteArcs={handleDeleteArcs}
+				handleDeleteAll={handleDeleteAll}
 				actionButtonClass={actionButtonClass}
+				setResult={setResult}
+				handleTransformationIn={handleTransformationIn}
 			/>
 
 			<div
