@@ -24,6 +24,7 @@ import {
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";
 import ArrowMarker from "./components/ArrowMarker.jsx";
+import { ChangeTextDialogBox } from "./components/changeText.jsx";
 
 function addPlace(setPlaces) {
 	// Logic to add a place to the Pétri Network
@@ -55,19 +56,7 @@ function addArc() {
 	// Logic to add an arc to the Pétri Network
 }
 
-function addAnnotation() {
-	// Logic to add an annotation to the Pétri Network
-	setTransitions((prevTransitions) => [
-		...prevTransitions,
-		{
-			id: Date.now(),
-			x: mousePos.x - 20,
-			y: mousePos.y - 30,
-			width: 20,
-			height: 60,
-		},
-	]);
-}
+
 
 function App() {
 	const [isDialogBoxOpen, setDialogBoxIsOpen] = useState(false);
@@ -83,8 +72,10 @@ function App() {
 	const [movingPlaceId, setMovingPlaceId] = useState(null);
 
 	const [placingAnnotation, setPlacingAnnotation] = useState(false);
+	const [selectedAnnotation, setSelectedAnnotation] = useState(null);
 	const [annotations, setAnnotations] = useState([]);
 	const [movingAnnotationId, setMovingAnnotationId] = useState(null);
+	const [isTextBoxOpen, setIsTextBoxOpen] = useState(false);
 
 	const [arcs, setArcs] = useState([]);
 	const [creatingArc, setCreatingArc] = useState(false);
@@ -111,6 +102,19 @@ function App() {
 
 	const actionButtonClass =
 		"bg-background text-foreground hover:bg-accent hover:text-accent-foreground";
+
+	const addAnnotation = () => {
+		const newAnnotation = {
+			id: Date.now(),
+			x: mousePos.x - 20,
+			y: mousePos.y - 20,
+			text: "New annotation"
+		};
+
+		setAnnotations((prev) => [...prev, newAnnotation]);
+		setSelectedAnnotation(newAnnotation);
+		setIsTextBoxOpen(true);
+	}
 
 	const handleAddPlace = () => {
 		setPlacingPlace(!placingPlace);
@@ -289,6 +293,20 @@ function App() {
 					}}
 				/>
 			)}
+
+			{isTextBoxOpen && (
+				<ChangeTextDialogBox
+					setDialogBoxIsOpen={setIsTextBoxOpen}
+					previousText={""}
+					onSave={(text) => {
+					setAnnotations((prev) =>
+						prev.map((ann) =>
+						ann.id === selectedAnnotation.id ? { ...ann, text } : ann
+						)
+					);
+					}}
+				/>
+				)}
 			<div>
 				<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
 			</div>
@@ -304,6 +322,7 @@ function App() {
 				actionButtonClass={actionButtonClass}
 				setResult={setResult}
 				handleTransformationIn={handleTransformationIn}
+				addAnnotation={addAnnotation}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}

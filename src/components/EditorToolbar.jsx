@@ -5,6 +5,7 @@ import {
 	ButtonGroupText,
 } from "@/components/ui/button-group";
 import SimulationMenu from "./SimulationMenu.jsx";
+import AnnotationMenu from "./AnnotationMenu.jsx";
 
 export default function EditorToolbar({
 	actionButtonClass,
@@ -17,6 +18,7 @@ export default function EditorToolbar({
 	handleTransformationIn,
 	handleDeleteArcs,
 	handleDeleteAll,
+	addAnnotation,
 }) {
 	return (
 		<div className='Menu w-full'>
@@ -41,9 +43,8 @@ export default function EditorToolbar({
 					>
 						Add Arc
 					</Button>
-					<Button className={actionButtonClass} onClick={null}>
-						Add Annotation
-					</Button>
+					<AnnotationMenu addAnnotation={addAnnotation}  />
+					
 
 					<ButtonGroupSeparator />
 
