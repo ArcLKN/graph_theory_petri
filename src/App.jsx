@@ -27,7 +27,7 @@ import {
 	sources,
 	estSimple,
 	DFS,
-	isLive
+	isLive,
 } from "../petriLogic.js";
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";
@@ -639,20 +639,39 @@ function App() {
 								{arc.value}
 							</p>
 							{selectedElement === arc.id && (
-								<Button
-									variant='outline'
-									size='icon'
+								<ButtonGroup
 									className='absolute'
 									style={{
 										left: (fromPlace.x + toPlace.x) / 2,
 										top: (fromPlace.y + toPlace.y) / 2 + 40,
 									}}
-									onClick={() => {
-										setDialogBoxIsOpen(true);
-									}}
 								>
-									<Settings />
-								</Button>
+									<Button
+										variant='outline'
+										size='icon'
+										onClick={() => {
+											setDialogBoxIsOpen(true);
+										}}
+									>
+										<Settings />
+									</Button>
+									<Button
+										variant='outline'
+										className='bg-red-300 hover:bg-red-300'
+										size='icon'
+										onClick={() => {
+											// Delete arc
+											setArcs((prev) =>
+												prev.filter(
+													(a) => a.id !== arc.id
+												)
+											);
+											setSelectedElement(null);
+										}}
+									>
+										<Eraser />
+									</Button>
+								</ButtonGroup>
 							)}
 						</div>
 					);
@@ -662,7 +681,7 @@ function App() {
 				placeholder='Results will be here.'
 				disabled
 				value={result}
-				className='w-full h-24'
+				className='w-full h-24 text-black'
 			/>
 		</div>
 	);
