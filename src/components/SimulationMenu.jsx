@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function SimulationMenu({ setResult, handleTransformationIn }) {
+export default function SimulationMenu({ setResult, handleTransformationIn, handleDeadlock, handleBorne }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -38,6 +38,12 @@ export default function SimulationMenu({ setResult, handleTransformationIn }) {
 				</DropdownMenuItem>
 				<DropdownMenuItem onClick={handleTransformationIn}>
 					Transformer le réseau
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleDeadlock}>
+					Vérifier Deadlock situation
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleBorne}>
+					Vérification dépassement borne
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

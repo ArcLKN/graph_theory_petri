@@ -20,6 +20,14 @@ import {
 	isDeadlock,
 	isBorne,
 	simulation,
+	isInvariantTransitions,
+	isInvariantConservation,
+	tarjan,
+	puits,
+	sources,
+	estSimple,
+	DFS,
+	isLive,
 } from "../petriLogic.js";
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";
@@ -52,13 +60,23 @@ function addTransition(setTransitions, mousePos) {
 	]);
 }
 
-function addArc() {
-	// Logic to add an arc to the Pétri Network
+function addAnnotation() {
+	// Logic to add an annotation to the Pétri Network
+	setTransitions((prevTransitions) => [
+		...prevTransitions,
+		{
+			id: Date.now(),
+			x: mousePos.x - 20,
+			y: mousePos.y - 30,
+			width: 20,
+			height: 60,
+		},
+	]);
 }
 
-
-
 function App() {
+	const [isOriented, setIsOriented] = useState(true);
+
 	const [isDialogBoxOpen, setDialogBoxIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState(1);
 	const [doSimulation, setDoSimulation] = useState(false);
@@ -276,6 +294,28 @@ function App() {
 	};
 	/////////////////////////////
 
+	const handleBorne = () => {
+
+		const borne = isBorne();
+		if(!borne){
+			setResult("Dépassement de borne");
+		}
+		else (setResult("On est bien k-borné"))
+		return;
+	}
+
+	const handleDeadlock = () => {
+
+		const deadlock = isDeadlock();
+		if(!deadlock){
+			setResult("pas de deadlock");
+		}
+		else (setResult("deadlock situation"))
+		return;
+	}
+
+	/////////////////////////////
+
 	return (
 		<div className='w-screen h-screen App px-16 py-4 space-y-4'>
 			{isDialogBoxOpen && selectedItem && (
@@ -323,6 +363,11 @@ function App() {
 				setResult={setResult}
 				handleTransformationIn={handleTransformationIn}
 				addAnnotation={addAnnotation}
+				setIsOrientedGraph={setIsOriented}
+				isOrientedGraph={isOriented}
+				placingPlace={placingPlace}
+				handleBorne={handleBorne}
+				handleDeadlock={handleDeadlock}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}
@@ -360,7 +405,9 @@ function App() {
 									y2={toPlace.y + 16}
 									stroke='black'
 									strokeWidth={2}
-									markerEnd='url(#arrow)'
+									markerEnd={
+										isOriented ? "url(#arrow)" : null
+									}
 									pointerEvents='none'
 								/>
 							</g>
@@ -537,28 +584,47 @@ function App() {
 					</div>
 				))}
 				{selectedTransition && (
-					<Button
-						variant='outline'
-						size='icon'
+					<ButtonGroup
 						className='absolute'
 						style={{
 							left: selectedTransition.x - 10,
 							top: selectedTransition.y - 50,
 						}}
-						onClick={() => {
-							setMovingPlaceId(
-								movingPlaceId === selectedTransition.id
-									? null
-									: selectedTransition.id
-							);
-						}}
 					>
-						{movingPlaceId === selectedTransition.id ? (
-							<HandGrab />
-						) : (
-							<Hand />
-						)}
-					</Button>
+						<Button
+							variant='outline'
+							size='icon'
+							onClick={() => {
+								setMovingPlaceId(
+									movingPlaceId === selectedTransition.id
+										? null
+										: selectedTransition.id
+								);
+							}}
+						>
+							{movingPlaceId === selectedTransition.id ? (
+								<HandGrab />
+							) : (
+								<Hand />
+							)}
+						</Button>
+						<Button
+							variant='outline'
+							className='bg-red-300 hover:bg-red-300'
+							size='icon'
+							onClick={() => {
+								// Delete arc
+								setTransitions((prev) =>
+									prev.filter(
+										(a) => a.id !== selectedTransition.id
+									)
+								);
+								setSelectedElement(null);
+							}}
+						>
+							<Eraser />
+						</Button>
+					</ButtonGroup>
 				)}
 				{selectedArc && (
 					<>
@@ -647,20 +713,39 @@ function App() {
 								{arc.value}
 							</p>
 							{selectedElement === arc.id && (
-								<Button
-									variant='outline'
-									size='icon'
+								<ButtonGroup
 									className='absolute'
 									style={{
 										left: (fromPlace.x + toPlace.x) / 2,
 										top: (fromPlace.y + toPlace.y) / 2 + 40,
 									}}
-									onClick={() => {
-										setDialogBoxIsOpen(true);
-									}}
 								>
-									<Settings />
-								</Button>
+									<Button
+										variant='outline'
+										size='icon'
+										onClick={() => {
+											setDialogBoxIsOpen(true);
+										}}
+									>
+										<Settings />
+									</Button>
+									<Button
+										variant='outline'
+										className='bg-red-300 hover:bg-red-300'
+										size='icon'
+										onClick={() => {
+											// Delete arc
+											setArcs((prev) =>
+												prev.filter(
+													(a) => a.id !== arc.id
+												)
+											);
+											setSelectedElement(null);
+										}}
+									>
+										<Eraser />
+									</Button>
+								</ButtonGroup>
 							)}
 						</div>
 					);
@@ -670,7 +755,7 @@ function App() {
 				placeholder='Results will be here.'
 				disabled
 				value={result}
-				className='w-full h-24'
+				className='w-full h-24 text-black'
 			/>
 		</div>
 	);

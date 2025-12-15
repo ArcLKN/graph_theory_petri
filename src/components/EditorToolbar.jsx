@@ -4,6 +4,8 @@ import {
 	ButtonGroupSeparator,
 	ButtonGroupText,
 } from "@/components/ui/button-group";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import SimulationMenu from "./SimulationMenu.jsx";
 import AnnotationMenu from "./AnnotationMenu.jsx";
 
@@ -18,15 +20,23 @@ export default function EditorToolbar({
 	handleTransformationIn,
 	handleDeleteArcs,
 	handleDeleteAll,
+	setIsOrientedGraph,
+	isOrientedGraph,
+	placingPlace,
+	handleDeadlock,
+	handleBorne,
 	addAnnotation,
 }) {
 	return (
-		<div className='Menu w-full'>
+		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
 			<div className='flex flex-row items-start space-x-4'>
 				<ButtonGroup className='flex flex-wrap gap-2'>
 					{/* Action Buttons */}
 					<Button
-						className={actionButtonClass}
+						className={
+							`${placingPlace ? "bg-orange-300" : ""}` +
+							actionButtonClass
+						}
 						onClick={handleAddPlace}
 					>
 						Add Place
@@ -59,6 +69,8 @@ export default function EditorToolbar({
 					<SimulationMenu
 						setResult={setResult}
 						handleTransformationIn={handleTransformationIn}
+						handleDeadlock = {handleDeadlock}
+						handleBorne={handleBorne}
 					/>
 
 					<ButtonGroupSeparator />
@@ -84,6 +96,13 @@ export default function EditorToolbar({
 						Delete All
 					</Button>
 				</ButtonGroup>
+			</div>
+			<div>
+				<Switch
+					checked={isOrientedGraph}
+					onCheckedChange={() => setIsOrientedGraph(!isOrientedGraph)}
+				/>
+				<Label className='ml-2'>Oriented Graph</Label>
 			</div>
 		</div>
 	);
