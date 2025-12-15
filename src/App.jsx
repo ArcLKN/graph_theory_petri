@@ -246,7 +246,6 @@ function App() {
 			<div
 				className='Canvas border border-gray-400 w-full h-8/12 bg-white rounded-2xl'
 				onMouseMove={(e) => {
-					const rect = e.currentTarget.getBoundingClientRect();
 					setMousePos({
 						x: e.clientX,
 						y: e.clientY,
