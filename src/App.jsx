@@ -121,6 +121,53 @@ function App() {
 		setArcs([]);
 	};
 
+	const handleClickCanvas = () => {
+		// Logic for clicking on the canvas
+		if (movingPlaceId) {
+			console.log("Moving place:", movingPlaceId);
+			setPlaces((prev) =>
+				prev.map((place) =>
+					place.id === movingPlaceId
+						? {
+								...place,
+								x: mousePos.x - 16,
+								y: mousePos.y - 16,
+						  }
+						: place
+				)
+			);
+			setTransitions((prev) =>
+				prev.map((transition) =>
+					transition.id === movingPlaceId
+						? {
+								...transition,
+								x: mousePos.x - 16,
+								y: mousePos.y - 16,
+						  }
+						: transition
+				)
+			);
+			setMovingPlaceId(null);
+			return;
+		} else if (placingPlace) {
+			setPlaces((prev) => [
+				...prev,
+				{
+					id: Date.now(),
+					x: mousePos.x - 16,
+					y: mousePos.y - 16,
+					value: 0,
+				},
+			]);
+
+			setPlacingPlace(false);
+		} else if (placingTransition) {
+			addTransition(setTransitions, mousePos);
+			setPlacingTransition(false);
+			return;
+		}
+	};
+
 	/////////// Gabriel ///////////
 	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
 	const handleTransformationIn = () => {
@@ -212,51 +259,7 @@ function App() {
 						y: e.clientY,
 					});
 				}}
-				onClick={() => {
-					if (movingPlaceId) {
-						console.log("Moving place:", movingPlaceId);
-						setPlaces((prev) =>
-							prev.map((place) =>
-								place.id === movingPlaceId
-									? {
-											...place,
-											x: mousePos.x - 16,
-											y: mousePos.y - 16,
-									  }
-									: place
-							)
-						);
-						setTransitions((prev) =>
-							prev.map((transition) =>
-								transition.id === movingPlaceId
-									? {
-											...transition,
-											x: mousePos.x - 16,
-											y: mousePos.y - 16,
-									  }
-									: transition
-							)
-						);
-						setMovingPlaceId(null);
-						return;
-					} else if (placingPlace) {
-						setPlaces((prev) => [
-							...prev,
-							{
-								id: Date.now(),
-								x: mousePos.x - 16,
-								y: mousePos.y - 16,
-								value: 0,
-							},
-						]);
-
-						setPlacingPlace(false);
-					} else if (placingTransition) {
-						addTransition(setTransitions, mousePos);
-						setPlacingTransition(false);
-						return;
-					}
-				}}
+				onClick={handleClickCanvas}
 			>
 				{/* Canvas for drawing Pétri Network will go here */}
 				<svg className='absolute inset-0 w-full h-full pointer-events-none'>
