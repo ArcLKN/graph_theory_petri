@@ -103,6 +103,9 @@ function App() {
 	const selectedItem = selectedPlace ?? selectedArc;
 	const setItems = selectedPlace ? setPlaces : setArcs;
 
+	const findNodeById = (id) =>
+		places.find((p) => p.id === id) || transitions.find((t) => t.id === id);
+
 	const [result, setResult] = useState("");
 
 	const actionButtonClass =
@@ -181,6 +184,43 @@ function App() {
 	const handleClickPlace = (placeId) => {
 		// Logic for clicking on a place
 		console.log("Place clicked:", placeId);
+	};
+
+	const handleTransitionClick = (transitionId) => {
+		// Logic for clicking on a transition
+		if (!creatingArc) {
+			setSelectedElement(
+				selectedElement === transitionId ? null : transitionId
+			);
+			return;
+		}
+
+		// Arc creation logic
+		if (!arcStartId) {
+			setArcStartId(transitionId);
+			setArcStartType("transition");
+		} else if (arcStartType === "place") {
+			setArcs((prev) => [
+				...prev,
+				{
+					id: Date.now(),
+					from: arcStartId,
+					to: transitionId,
+					value: 1,
+				},
+			]);
+			setCreatingArc(false);
+			setArcStartId(null);
+			setArcStartType(null);
+			return;
+		}
+	};
+
+	const handleMouseMove = (e) => {
+		setMousePos({
+			x: e.clientX,
+			y: e.clientY,
+		});
 	};
 
 	/////////// Gabriel ///////////
@@ -265,17 +305,12 @@ function App() {
 				handleTransformationIn={handleTransformationIn}
 			/>
 
+			{/* Canvas for drawing Pétri Network will go here */}
 			<div
 				className='Canvas border border-gray-400 w-full h-8/12 bg-white rounded-2xl'
-				onMouseMove={(e) => {
-					setMousePos({
-						x: e.clientX,
-						y: e.clientY,
-					});
-				}}
+				onMouseMove={handleMouseMove}
 				onClick={handleClickCanvas}
 			>
-				{/* Canvas for drawing Pétri Network will go here */}
 				<svg className='absolute inset-0 w-full h-full pointer-events-none'>
 					<defs>
 						<marker
@@ -291,12 +326,8 @@ function App() {
 						</marker>
 					</defs>
 					{arcs.map((arc) => {
-						const fromPlace =
-							places.find((p) => p.id === arc.from) ||
-							transitions.find((t) => t.id === arc.from);
-						const toPlace =
-							places.find((p) => p.id === arc.to) ||
-							transitions.find((t) => t.id === arc.to);
+						const fromPlace = findNodeById(arc.from);
+						const toPlace = findNodeById(arc.to);
 						if (!fromPlace || !toPlace) return null;
 
 						return (
@@ -320,9 +351,7 @@ function App() {
 					{creatingArc &&
 						arcStartId &&
 						(() => {
-							const fromPlace =
-								places.find((p) => p.id === arcStartId) ||
-								transitions.find((t) => t.id === arcStartId);
+							const fromPlace = findNodeById(arcStartId);
 							if (!fromPlace) return null;
 							return (
 								<line
@@ -350,36 +379,7 @@ function App() {
 							stroke='black'
 							strokeWidth='2'
 							pointerEvents='all'
-							onClick={() => {
-								if (!creatingArc) {
-									setSelectedElement(
-										selectedElement === transition.id
-											? null
-											: transition.id
-									);
-									return;
-								}
-
-								// Arc creation logic
-								if (!arcStartId) {
-									setArcStartId(transition.id);
-									setArcStartType("transition");
-								} else if (arcStartType === "place") {
-									setArcs((prev) => [
-										...prev,
-										{
-											id: Date.now(),
-											from: arcStartId,
-											to: transition.id,
-											value: 1,
-										},
-									]);
-									setCreatingArc(false);
-									setArcStartId(null);
-									setArcStartType(null);
-									return;
-								}
-							}}
+							onClick={() => handleTransitionClick(transition.id)}
 						/>
 					))}
 					{placingTransition && (
