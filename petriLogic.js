@@ -1,4 +1,18 @@
-import { etatDepart, valDepart, reseau } from "./varGlobales.js";
+var reseau = { 
+    "E1": [10, ["T1", 2]], 
+    "T1": [0, ["E2", 1], ["E4", 1]], 
+    "E2": [0, ["T2", 2]], 
+    "E4": [0, ["T2", 2]], 
+    "T2": [0, ["E3", 1], ["E5", 1]], 
+    "E3": [0], 
+    "E5": [0]
+};
+
+var etatDepart;
+etatDepart = "E1";
+
+var valDepart;
+valDepart = 10;
 
 /*
 isBipartite - Vérifie que le réseau Petri est bien structuré
@@ -10,9 +24,9 @@ Si un voisin a déjà la même couleur que le nœud actuel, il y a conflit et le
 Retourne: booléen (true si bipartite, false si conflit détecté)
 Relations: Fonction de validation indépendante, utilisée avant la simulation
 */
-function isBipartite() {
+function isBipartite(graph) {
     const color = {};
-    const nodes = Object.keys(reseau);
+    const nodes = Object.keys(graph);
 
     for (const element of nodes) {
         if (!(element in color)) {
@@ -21,7 +35,7 @@ function isBipartite() {
 
             while (queue.length > 0) {
                 const noeud = queue.shift();
-                const voisins = reseau[noeud].slice(1).map(voisin => voisin[0]);
+                const voisins = graph[noeud].slice(1).map(voisin => voisin[0]);
 
                 for (const voisin of voisins) {
                     if (!(voisin in color)) {
@@ -53,42 +67,6 @@ function isBipartite() {
 }
 
 /*
-marquageValide - Vérifie que le marquage du réseau de Pétri est valide
-Description: Parcourt tous les états (places) et transitions du réseau pour vérifier
-             que le nombre de ressources (jetons) associé à chacun est correct.
-             Un marquage est considéré valide si chaque valeur est un entier
-             et si elle est supérieure ou égale à 0.
-Importance: Essentielle pour garantir la cohérence du réseau avant une simulation,
-            car un marquage invalide peut produire des comportements impossibles
-            (ressources négatives ou non entières).
-Méthode: Vérifie pour chaque état et transition que la valeur associée est de type entier
-         (Number.isInteger) et qu’elle est >= 0.
-Retourne: booléen (true si tous les marquages sont valides, false sinon)
-Relations: Fonction de validation, utilisée avant le lancement de la simulation
-*/
-function marquageValide() {
-
-  if (!reseau.hasOwnProperty(etatDepart)) {
-    return false;
-  }
-
-  if (!Number.isInteger(valDepart) || valDepart < 0) {
-    return false;
-  }
-
-  for (const noeud in reseau) {
-    const valeur = reseau[noeud][0];
-
-    if (!Number.isInteger(valeur) || valeur < 0) {
-      return false;
-    }
-  }
-
-  // Si toutes les vérifications passent
-  return true;
-}
-
-/*
 isConnex - Vérifie qu'il n'y a pas de parties du réseau isolées
 Description: Démarre d'un nœud et explore tous les voisins avec BFS. Si on peut atteindre tous les nœuds, le réseau est connexe.
 Importance: Crucial car un réseau avec des parties déconnectées ne peut pas fonctionner correctement.
@@ -96,8 +74,8 @@ Méthode: Utilise BFS pour parcourir le graphe. Maintient un Set de nœuds visit
 Retourne: booléen (true si tous les nœuds sont atteignables, false si des nœuds sont isolés)
 Relations: Fonction de validation indépendante, utilisée avant la simulation
 */
-function isConnex(){
-    const nodes = Object.keys(reseau);
+function isConnex(graph){
+    const nodes = Object.keys(graph);
     const debut = nodes[0];
     const noeuds_visites = new Set;
 
@@ -108,7 +86,7 @@ function isConnex(){
 
         if (!noeuds_visites.has(noeud)){
             noeuds_visites.add(noeud);
-            const voisins = reseau[noeud].slice(1).map(voisin => voisin[0]);
+            const voisins = graph[noeud].slice(1).map(voisin => voisin[0]);
             for (const voisin of voisins) {
                 if (!noeuds_visites.has(voisin)){
                     queue.push(voisin);
@@ -237,7 +215,7 @@ Retourne: rien (void) car la mutation de reseau est l'effet voulu
 Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Différente de calculNouveauMarquage (retourne copie).
 Changements: Amélioration pour gérer plusieurs arcs d'un même état vers une transition (cohérence avec isFranchissable)
 */
-function echangeRessources(transitionId) {
+function echangeRessources(reseau, transitionId) {
     for (const noeud in reseau) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
@@ -276,7 +254,7 @@ Importance: Un deadlock signifie que le système ne peut plus évoluer. C'est un
 Retourne: booléen (true si deadlock détecté, false si au moins une transition est franchissable)
 Relations: Appelée après des simulations pour détecter l'arrêt du système. Utilise isFranchissable.
 */
-function isDeadlock() {
+function isDeadlock(reseau) {
     for (const noeud in reseau) {
         if (noeud.startsWith("T")) {
             if (isFranchissable(reseau, noeud)) {
@@ -306,19 +284,16 @@ Paramètres: graph (réseau), borneMax (limite de jetons par état), maxIteratio
 Retourne: booléen (false si un état dépasse borneMax, true si tous respectent la borne)
 Relations: Utilise calculNouveauMarquage pour simulations hypothétiques sans modifier le réseau réel.
 */
-function isBorne(borneMax, maxIterations = 5000) {
-    const marquageInitial_debut = marquageInitial(reseau);
+function isBorne(graph, borneMax) {
+    const marquageInitial_debut = marquageInitial(graph);
     const queue = [marquageInitial_debut];
     const visites = new Set();
     visites.add(JSON.stringify(marquageInitial_debut));
     
-    let compteur = 0;
-    
-    while (queue.length > 0 && compteur < maxIterations) {
+    while (queue.length > 0) {
         const marquageActuel = queue.shift();
-        compteur++;
         
-        for (const noeud in reseau) {
+        for (const noeud in graph) {
             if (noeud.startsWith("E")) {
                 if (marquageActuel[noeud] > borneMax) {
                     return false;
@@ -326,12 +301,12 @@ function isBorne(borneMax, maxIterations = 5000) {
             }
         }
         
-        for (const transition in reseau) {
+        for (const transition in graph) {
             if (transition.startsWith("T")) {
                 let peutTirer = true;
-                for (const etat in reseau) {
+                for (const etat in graph) {
                     if (etat.startsWith("E")) {
-                        const arcs = reseau[etat].slice(1);
+                        const arcs = graph[etat].slice(1);
                         for (const arc of arcs) {
                             const [destination, poids] = arc;
                             if (destination === transition && marquageActuel[etat] < poids) {
@@ -344,7 +319,7 @@ function isBorne(borneMax, maxIterations = 5000) {
                 }
                 
                 if (peutTirer) {
-                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, reseau);
+                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, graph);
                     const marquageStr = JSON.stringify(nouveauMarquage);
                     
                     if (!visites.has(marquageStr)) {
@@ -357,6 +332,24 @@ function isBorne(borneMax, maxIterations = 5000) {
     }
     
     return true;
+}
+
+/*
+simulation - Fonction principale appelée par l'UI
+Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
+Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
+Fonctionnement:
+1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
+2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
+3. Si false, ne fait rien (la transition ne peut pas être tirée)
+Usage: L'UI React appellera cette fonction quand l'utilisateur clique sur une transition dans le canvas.
+Retourne: rien (void), mais modifie reseau si la transition est franchissable
+Relations: Point d'entrée principal. Utilise isFranchissable et echangeRessources.
+*/
+function simulation(reseau, transitionId) {
+    if (isFranchissable(reseau, transitionId)) {
+        echangeRessources(reseau, transitionId);
+    }
 }
 
 /*
@@ -376,28 +369,30 @@ Paramètres: graph (réseau), maxDepth (profondeur max d'exploration, défaut=20
 Retourne: booléen (true si invariant trouvé, false sinon)
 Relations: Fonction d'analyse avancée. Utilise calculNouveauMarquage pour simulations hypothétiques.
 */
-function isInvariantTransitions(maxDepth = 20) {
-    const marquageInitial_ref = marquageInitial(reseau);
+function isInvariantTransitions(graph) {
+    const marquageInitial_ref = marquageInitial(graph);
     const marquageInitialStr = JSON.stringify(marquageInitial_ref);
     
-    const queue = [[marquageInitial_ref, 0]];
+    const queue = [marquageInitial_ref];
     const visites = new Set();
-    visites.add(marquageInitialStr + "_0");
+    visites.add(marquageInitialStr);
+    let premiereIteration = true;
     
     while (queue.length > 0) {
-        const [marquageActuel, profondeur] = queue.shift();
+        const marquageActuel = queue.shift();
         
-        if (profondeur >= maxDepth) {
-            continue;
+        if (!premiereIteration && JSON.stringify(marquageActuel) === marquageInitialStr) {
+            return true;
         }
+        premiereIteration = false;
         
-        for (const transition in reseau) {
+        for (const transition in graph) {
             if (transition.startsWith("T")) {
                 let peutTirer = true;
-                for (const etat in reseau) {
+                for (const etat in graph) {
                     if (etat.startsWith("E")) {
                         let total_poids = 0;
-                        const arcs = reseau[etat].slice(1);
+                        const arcs = graph[etat].slice(1);
                         for (const arc of arcs) {
                             const [destination, poids] = arc;
                             if (destination === transition) {
@@ -412,17 +407,16 @@ function isInvariantTransitions(maxDepth = 20) {
                 }
                 
                 if (peutTirer) {
-                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, reseau);
+                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, graph);
                     const nouveauMarquageStr = JSON.stringify(nouveauMarquage);
                     
-                    if (nouveauMarquageStr === marquageInitialStr && profondeur > 0) {
+                    if (nouveauMarquageStr === marquageInitialStr) {
                         return true;
                     }
                     
-                    const stateKey = nouveauMarquageStr + "_" + (profondeur + 1);
-                    if (!visites.has(stateKey)) {
-                        visites.add(stateKey);
-                        queue.push([nouveauMarquage, profondeur + 1]);
+                    if (!visites.has(nouveauMarquageStr)) {
+                        visites.add(nouveauMarquageStr);
+                        queue.push(nouveauMarquage);
                     }
                 }
             }
@@ -450,8 +444,8 @@ Paramètres: graph (réseau), maxStates (nombre max de marquages à explorer, d�
 Retourne: booléen (true si conservation respectée, false si création/destruction détectée)
 Relations: Fonction d'analyse de propriété structurelle. Utilise calculNouveauMarquage pour simulations.
 */
-function isInvariantConservation(maxStates = 1000) {
-    const marquageInitial_ref = marquageInitial(reseau);
+function isInvariantConservation(graph) {
+    const marquageInitial_ref = marquageInitial(graph);
     
     let totalInitial = 0;
     for (const etat in marquageInitial_ref) {
@@ -462,11 +456,8 @@ function isInvariantConservation(maxStates = 1000) {
     const visites = new Set();
     visites.add(JSON.stringify(marquageInitial_ref));
     
-    let compteur = 0;
-    
-    while (queue.length > 0 && compteur < maxStates) {
+    while (queue.length > 0) {
         const marquageActuel = queue.shift();
-        compteur++;
         
         let totalActuel = 0;
         for (const etat in marquageActuel) {
@@ -477,13 +468,13 @@ function isInvariantConservation(maxStates = 1000) {
             return false;
         }
         
-        for (const transition in reseau) {
+        for (const transition in graph) {
             if (transition.startsWith("T")) {
                 let peutTirer = true;
-                for (const etat in reseau) {
+                for (const etat in graph) {
                     if (etat.startsWith("E")) {
                         let total_poids = 0;
-                        const arcs = reseau[etat].slice(1);
+                        const arcs = graph[etat].slice(1);
                         for (const arc of arcs) {
                             const [destination, poids] = arc;
                             if (destination === transition) {
@@ -498,7 +489,7 @@ function isInvariantConservation(maxStates = 1000) {
                 }
                 
                 if (peutTirer) {
-                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, reseau);
+                    const nouveauMarquage = calculNouveauMarquage(transition, marquageActuel, graph);
                     const marquageStr = JSON.stringify(nouveauMarquage);
                     
                     if (!visites.has(marquageStr)) {
@@ -537,8 +528,8 @@ Paramètres: graph (réseau de Petri)
 Retourne: tableau de tableaux (chaque sous-tableau = une SCC avec ses nœuds)
 Relations: Fonction d'analyse structurelle avancée. Détecte les cycles et la modularité du réseau.
 */
-function tarjan() {
-    const nodes = Object.keys(reseau);
+function tarjan(graph) {
+    const nodes = Object.keys(graph);
     let index = 0;
     const stack = [];
     const nodeData = {};
@@ -559,7 +550,7 @@ function tarjan() {
         stack.push(v);
         nodeData[v].onStack = true;
         
-        const successeurs = reseau[v].slice(1).map(arc => arc[0]);
+        const successeurs = graph[v].slice(1).map(arc => arc[0]);
         
         for (const w of successeurs) {
             if (nodeData[w].index === undefined) {
@@ -597,166 +588,4 @@ lignes de test pour les fonctions => les enlever avant de push ou les rajouter s
 */
 
 
-function puits(){
-    let puit = [];
-    // on trouve les noeuds qui n'ont pas de connexions
-    for (let node in reseau){
-        if (reseau[node].length === 1){
-            puit.push(node);
-        }
-    }
-    return puit;
-}
-
-function sources(){
-    let compare = [];
-    let source = [];
-
-    // compare <-- tous les noeuds connectés
-    for (let node in reseau){
-        for (let i = 1; i < reseau[node].length; i++){
-            if (!compare.includes(reseau[node][i][0])){
-                compare.push(reseau[node][i][0]);
-            }
-        }
-    }
-    // source <-- noeuds not in compare
-    for (let node in reseau){
-        if (!compare.includes(node)){
-            source.push(node);
-        }
-    }
-
-    return source;
-}
-
-//vérifie si le réseau est simple 
-function estSimple() {
-    // Pour chaque noeuds on vérifie si il n'y a pas deux liens vers le même noeud
-    for (let node in reseau) {
-        let liens = [];
-
-        for (let i = 1; i < reseau[node].length; i++) {
-            let cible = reseau[node][i][0];
-
-            // vérifier si la cible existe déjà dans le tableau destinations
-            for (let j = 0; j < liens.length; j++) {
-                if (liens[j] === cible) {
-                    return false;
-                }
-            }
-            liens.push(cible);
-        }
-    }
-    return true;
-}
-
-function DFS(départ) {
-    var visités = [];
-    var étatsTrouvés = [];
-    var pile = [départ];
-
-    while (pile.length > 0) {
-        var noeud = pile.pop();
-
-        if (!(visités.includes(noeud))){
-            visités.push(noeud);
-            if (noeud[0] === "E") {
-                étatsTrouvés.push(noeud);
-            }
-
-             var arcs = reseau[noeud];
-            for (var j = 1; j < arcs.length; j++) {
-                var voisin = arcs[j][0];
-                pile.push(voisin);
-            }
-        }
-    }
-
-    return étatsTrouvés;
-}
-
-function reachable(from, to, graph) {
-  const visited = new Set();
-  const queue = [from];
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (current === to) return true;
-
-    if (visited.has(current)) continue;
-    visited.add(current);
-
-    (graph[current] || []).forEach(next => queue.push(next));
-  }
-  return false;
-}
-
-function isLive() {
-  // 1. Construire le graphe d’atteignabilité
-  const graph = buildReachabilityGraph(reseau);
-  const markings = Object.keys(graph);
-
-  // 2. Pour chaque marquage atteignable
-  for (const M of markings) {
-
-    // Reconstruire un réseau avec ce marquage
-    for (const transition in reseau) {
-      if (!transition.startsWith("T")) continue;
-
-      let transitionVivante = false;
-
-      // 3. Chercher un futur où la transition est franchissable
-      for (const M2 of markings) {
-        if (reachable(M, M2, graph)) {
-
-          // Recréer le réseau correspondant à M2
-          const reseauM2 = JSON.parse(JSON.stringify(reseau));
-          const tokens = M2.split(",").map(Number);
-
-          let i = 0;
-          for (const node in reseauM2) {
-            if (node.startsWith("E")) {
-              reseauM2[node][0] = tokens[i++];
-            }
-          }
-
-          if (isEnabled(reseauM2, transition)) {
-            transitionVivante = true;
-            break;
-          }
-        }
-      }
-
-      // 4. Transition morte → réseau non vivant
-      if (!transitionVivante) {
-        return false;
-      }
-    }
-  }
-
-  // 5. Toutes les transitions sont vivantes
-  return true;
-}
-
-/*
-simulation - Fonction principale appelée par l'UI
-Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
-Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
-Fonctionnement:
-1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
-2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
-3. Si false, ne fait rien (la transition ne peut pas être tirée)
-Usage: L'UI React appellera cette fonction quand l'utilisateur clique sur une transition dans le canvas.
-Retourne: rien (void), mais modifie reseau si la transition est franchissable
-Relations: Point d'entrée principal. Utilise isFranchissable et echangeRessources.
-*/
-function simulation(transitionId) {
-    if (isFranchissable(reseau, transitionId)) {
-        echangeRessources(transitionId);
-    }
-}
-
-export { isBipartite, marquageValide, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation,
-    isInvariantTransitions, isInvariantConservation, tarjan, puits, sources, estSimple, DFS, isLive
- };
+export { reseau, isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
