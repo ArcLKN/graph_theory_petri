@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { ChangeValueDialogBox } from "./components/changeValue";
 import { Button } from "./components/ui/button";
-import {
-	ButtonGroup,
-	ButtonGroupSeparator,
-	ButtonGroupText,
-} from "@/components/ui/button-group";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Hand, HandGrab, Eraser, Settings } from "lucide-react";
 import {
@@ -52,14 +48,6 @@ function addTransition(setTransitions, mousePos) {
 			height: 60, // hauteur du rectangle
 		},
 	]);
-}
-
-function addArc() {
-	// Logic to add an arc to the Pétri Network
-}
-
-function addAnnotation() {
-	// Logic to add an annotation to the Pétri Network
 }
 
 function App() {
@@ -166,6 +154,11 @@ function App() {
 			setPlacingTransition(false);
 			return;
 		}
+	};
+
+	const handleClickPlace = (placeId) => {
+		// Logic for clicking on a place
+		console.log("Place clicked:", placeId);
 	};
 
 	/////////// Gabriel ///////////
