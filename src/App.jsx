@@ -97,8 +97,21 @@ function App() {
 	const selectedTransition = transitions.find(
 		(t) => t.id === selectedElement
 	);
+	const selectedItem = selectedPlace ?? selectedArc;
+	const setItems = selectedPlace ? setPlaces : setArcs;
 
 	const [result, setResult] = useState("");
+
+	const actionButtonClass =
+		"bg-background text-foreground hover:bg-accent hover:text-accent-foreground";
+
+	const handleAddPlace = () => {
+		setPlacingPlace(!placingPlace);
+	};
+
+	const handleAddTransition = () => {
+		setPlacingTransition(!placingTransition);
+	};
 
 	/////////// Gabriel ///////////
 	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
@@ -150,33 +163,22 @@ function App() {
 
 	return (
 		<div className='w-screen h-screen'>
-			{isDialogBoxOpen && (
+			{isDialogBoxOpen && selectedItem && (
 				<ChangeValueDialogBox
 					setDialogBoxIsOpen={setDialogBoxIsOpen}
 					previousValue={(selectedPlace ?? selectedArc).value ?? 1}
 					onSave={(value) => {
-						if (selectedPlace) {
-							// Update place value
-							setPlaces((prev) =>
-								prev.map((place) =>
-									place.id === selectedElement
-										? { ...place, value: value }
-										: place
-								)
-							);
-						} else if (selectedArc) {
-							// Update arc value
-							setArcs((prev) =>
-								prev.map((arc) =>
-									arc.id === selectedElement
-										? { ...arc, value: value }
-										: arc
-								)
-							);
-						}
+						setItems((prev) =>
+							prev.map((item) =>
+								item.id === selectedElement
+									? { ...item, value }
+									: item
+							)
+						);
 					}}
 				/>
 			)}
+
 			<div className='App px-16 py-4 space-y-4 w-full h-full'>
 				<div>
 					<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
@@ -185,23 +187,19 @@ function App() {
 					<div className='flex flex-row items-start space-x-4'>
 						<ButtonGroup className='flex flex-wrap gap-2'>
 							<Button
-								className='bg-background text-foreground hover:bg-accent hover:text-accent-foreground'
-								onClick={() => {
-									setPlacingPlace(!placingPlace);
-								}}
+								className={actionButtonClass}
+								onClick={handleAddPlace}
 							>
 								Add Place
 							</Button>
 							<Button
-								className='bg-background text-foreground hover:bg-accent hover:text-accent-foreground'
-								onClick={() =>
-									setPlacingTransition(!placingTransition)
-								}
+								className={actionButtonClass}
+								onClick={handleAddTransition}
 							>
 								Add Transition
 							</Button>
 							<Button
-								className='bg-background text-foreground hover:bg-accent hover:text-accent-foreground'
+								className={actionButtonClass}
 								onClick={() => {
 									setCreatingArc(!creatingArc);
 									setArcStartId(null);
@@ -210,7 +208,7 @@ function App() {
 								Add Arc
 							</Button>
 							<Button
-								className='bg-background text-foreground hover:bg-accent hover:text-accent-foreground'
+								className={actionButtonClass}
 								onClick={null}
 							>
 								Add Annotation
