@@ -51,10 +51,6 @@ function addTransition(setTransitions, mousePos) {
 	]);
 }
 
-function addArc() {
-	// Logic to add an arc to the Pétri Network
-}
-
 function addAnnotation() {
 	// Logic to add an annotation to the Pétri Network
 	setTransitions((prevTransitions) => [
@@ -70,6 +66,8 @@ function addAnnotation() {
 }
 
 function App() {
+	const [isOriented, setIsOriented] = useState(true);
+
 	const [isDialogBoxOpen, setDialogBoxIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState(1);
 	const [doSimulation, setDoSimulation] = useState(false);
@@ -304,6 +302,8 @@ function App() {
 				actionButtonClass={actionButtonClass}
 				setResult={setResult}
 				handleTransformationIn={handleTransformationIn}
+				setIsOrientedGraph={setIsOriented}
+				isOrientedGraph={isOriented}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}
