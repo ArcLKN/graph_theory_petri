@@ -278,6 +278,28 @@ function App() {
 	};
 	/////////////////////////////
 
+	const handleDeadlock = () => {
+
+		const deadlock = isDeadlock();
+		if (!deadlock){
+			setResult("Pas de Deadlock détecté");
+		} 
+		else (setResult("Toutes les transitions sont infranchissables --> Deadlock situation"))
+		return;
+	}
+
+	const handleBorne = () => {
+
+		const borne = isBorne();
+		if (!borne){
+			setResult("Le réseau dépasse la borne --> k-borné dépassé");
+		}
+		else (setResult("Le réseau ne dépasse pas la borne --> bien k-borné"))
+		return;
+	}
+
+	/////////////////////////////
+
 	return (
 		<div className='w-screen h-screen App px-16 py-4 space-y-4'>
 			{isDialogBoxOpen && selectedItem && (
@@ -312,7 +334,12 @@ function App() {
 				handleTransformationIn={handleTransformationIn}
 				setIsOrientedGraph={setIsOriented}
 				isOrientedGraph={isOriented}
+<<<<<<< HEAD
 				placingPlace={placingPlace}
+=======
+				handleDeadlock={handleDeadlock}
+				handleBorne={handleBorne}
+>>>>>>> recover-deadlock
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}
