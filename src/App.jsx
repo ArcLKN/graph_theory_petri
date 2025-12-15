@@ -23,6 +23,7 @@ import {
 } from "../petriLogic.js";
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";
+import ArrowMarker from "./components/ArrowMarker.jsx";
 
 function addPlace(setPlaces) {
 	// Logic to add a place to the Pétri Network
@@ -312,39 +313,38 @@ function App() {
 				onClick={handleClickCanvas}
 			>
 				<svg className='absolute inset-0 w-full h-full pointer-events-none'>
-					<defs>
-						<marker
-							id='arrow'
-							markerWidth='10'
-							markerHeight='10'
-							refX='20'
-							refY='5'
-							orient='auto'
-							markerUnits='strokeWidth'
-						>
-							<path d='M 0 0 L 10 5 L 0 10 z' fill='black' />
-						</marker>
-					</defs>
+					<ArrowMarker />
 					{arcs.map((arc) => {
 						const fromPlace = findNodeById(arc.from);
 						const toPlace = findNodeById(arc.to);
 						if (!fromPlace || !toPlace) return null;
 
 						return (
-							<line
-								key={arc.id}
-								x1={fromPlace.x + 16}
-								y1={fromPlace.y + 16}
-								x2={toPlace.x + 16}
-								y2={toPlace.y + 16}
-								stroke='black'
-								strokeWidth='2'
-								pointerEvents='stroke'
-								onClick={() => {
-									setSelectedElement(arc.id);
-								}}
-								markerEnd='url(#arrow)'
-							/>
+							<g key={arc.id}>
+								{/* Click area */}
+								<line
+									x1={fromPlace.x + 16}
+									y1={fromPlace.y + 16}
+									x2={toPlace.x + 16}
+									y2={toPlace.y + 16}
+									stroke='transparent'
+									strokeWidth={20}
+									pointerEvents='stroke'
+									onClick={() => setSelectedElement(arc.id)}
+								/>
+
+								{/* Visible line */}
+								<line
+									x1={fromPlace.x + 16}
+									y1={fromPlace.y + 16}
+									x2={toPlace.x + 16}
+									y2={toPlace.y + 16}
+									stroke='black'
+									strokeWidth={2}
+									markerEnd='url(#arrow)'
+									pointerEvents='none'
+								/>
+							</g>
 						);
 					})}
 					{creatingArc &&
