@@ -103,6 +103,7 @@ function App() {
 
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
+	const [reseauP, setReseauP] = useState(reseau)	
 
 	const selectedPlace =
 		places.find((place) => place.id === selectedElement) || null;
@@ -249,7 +250,8 @@ function App() {
 	/////////// Gabriel ///////////
 	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
 	const handleTransformationIn = () => {
-		const res = transformationIn(places, transitions, arcs);
+			const res = transformationIn(places, transitions, arcs);
+		setReseauP(res);
 		const formatted = formatReseau(res);
 		console.log(formatted);
 		setResult(formatted);
@@ -257,41 +259,54 @@ function App() {
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-		// transformation en dictionnaire
-		handleTransformationIn();
+    // transformation en dictionnaire
+    handleTransformationIn();
+	// Déclaration et copie du réseau actuel
+    let currentReseau = structuredClone(reseauP);
 
-		// vérification bipartite
-		const marquage = marquageValide();
-		if (!marquage) {
-			setResult(
-				"erreur: Le réseau n'est pas valide ! (transition < 0 ou jeton d'un état n'est pas un nombre)"
-			);
-			return;
-		}
+	/*
+    // vérification bipartite
+    const marquage = marquageValide();
+    if (!marquage) {
+        setResult(
+            "erreur: Le réseau n'est pas valide ! (transition < 0 ou jeton d'un état n'est pas un nombre)"
+        );
+        return;
+    }
 
-		const bipartite = isBipartite();
-		if (!bipartite) {
-			setResult(
-				"erreur: Deux Transitions ou deux Etats connectés ensemble !"
-			);
-			return;
-		}
+    const bipartite = isBipartite();
+    if (!bipartite) {
+        setResult(
+            "erreur: Deux Transitions ou deux Etats connectés ensemble !"
+        );
+        return;
+    }
 
-		const connex = isConnex();
-		if (!connex) {
-			setResult("erreur: Le réseau n'est pas connex !");
-			return;
-		}
+    const connex = isConnex();
+    if (!connex) {
+        setResult("erreur: Le réseau n'est pas connex !");
+        return;
+    }
+		*/
 
-		// lancer la simulation pour toutes les transitions
-		Object.keys(reseau).forEach((node) => {
-			if (node.startsWith("T")) {
-				simulation(node);
-			}
-		});
+    // Simulation sur chaque transition
+    currentReseau = simulation(currentReseau);
 
-		transformationOut(places, transitions, arcs);
-	};
+    // Mettre à jour le state avec le réseau simulé
+    setReseauP(currentReseau);
+
+    // Mettre à jour places et arcs si besoin
+    const { places: newPlaces, arcs: newArcs } = transformationOut(
+        places,
+        transitions,
+        arcs,
+        currentReseau
+    );
+
+    setPlaces(newPlaces);
+    setArcs(newArcs);
+};
+
 	/////////////////////////////
 
 	const handleBorne = () => {
