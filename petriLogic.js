@@ -256,7 +256,7 @@ function echangeRessources(reseau, transitionId) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
             
-            const arcs = currentReseau[noeud].slice(1);
+            const arcs = reseau[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
@@ -265,18 +265,18 @@ function echangeRessources(reseau, transitionId) {
             }
             
             if (total_poids > 0) {
-                currentReseau[noeud][0] -= total_poids;
+                reseau[noeud][0] -= total_poids;
             }
         }
     }
-    
-    const sortiesTransition = currentReseau[transitionId].slice(1);
+
+    const sortiesTransition = reseau[transitionId].slice(1);
     for (const arc of sortiesTransition) {
         const [destination, poids] = arc;
-        currentReseau[destination][0] += poids;
+        reseau[destination][0] += poids;
     }
 
-    return currentReseau
+    return reseau
 }
 
 /*
@@ -370,24 +370,6 @@ function isBorne(graph, borneMax) {
     }
     
     return true;
-}
-
-/*
-simulation - Fonction principale appelée par l'UI
-Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
-Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
-Fonctionnement:
-1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
-2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
-3. Si false, ne fait rien (la transition ne peut pas être tirée)
-Usage: L'UI React appellera cette fonction quand l'utilisateur clique sur une transition dans le canvas.
-Retourne: rien (void), mais modifie reseau si la transition est franchissable
-Relations: Point d'entrée principal. Utilise isFranchissable et echangeRessources.
-*/
-function simulation(reseau, transitionId) {
-    if (isFranchissable(reseau, transitionId)) {
-        echangeRessources(reseau, transitionId);
-    }
 }
 
 /*
@@ -793,5 +775,5 @@ function simulation(reseauLocal) {
     return res;
 }
 
-export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan };
+export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan, DFS, estSimple, isLive, marquageValide, puits, sources,  };
 
