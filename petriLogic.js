@@ -67,6 +67,42 @@ function isBipartite(graph) {
 }
 
 /*
+marquageValide - Vérifie que le marquage du réseau de Pétri est valide
+Description: Parcourt tous les états (places) et transitions du réseau pour vérifier
+             que le nombre de ressources (jetons) associé à chacun est correct.
+             Un marquage est considéré valide si chaque valeur est un entier
+             et si elle est supérieure ou égale à 0.
+Importance: Essentielle pour garantir la cohérence du réseau avant une simulation,
+            car un marquage invalide peut produire des comportements impossibles
+            (ressources négatives ou non entières).
+Méthode: Vérifie pour chaque état et transition que la valeur associée est de type entier
+         (Number.isInteger) et qu’elle est >= 0.
+Retourne: booléen (true si tous les marquages sont valides, false sinon)
+Relations: Fonction de validation, utilisée avant le lancement de la simulation
+*/
+function marquageValide() {
+
+  if (!currentReseau.hasOwnProperty(etatDepart)) {
+    return false;
+  }
+
+  if (!Number.isInteger(valDepart) || valDepart < 0) {
+    return false;
+  }
+
+  for (const noeud in currentReseau) {
+    const valeur = currentReseau[noeud][0];
+
+    if (!Number.isInteger(valeur) || valeur < 0) {
+      return false;
+    }
+  }
+
+  // Si toutes les vérifications passent
+  return true;
+}
+
+/*
 isConnex - Vérifie qu'il n'y a pas de parties du réseau isolées
 Description: Démarre d'un nœud et explore tous les voisins avec BFS. Si on peut atteindre tous les nœuds, le réseau est connexe.
 Importance: Crucial car un réseau avec des parties déconnectées ne peut pas fonctionner correctement.
@@ -178,12 +214,12 @@ Fonctionnement:
 Retourne: booléen (true si la transition peut être tirée, false sinon)
 Relations: Appelée AVANT echangeRessources dans simulation. Utilisée par isDeadlock et isBorne.
 */
-function isFranchissable(reseau, transitionId) {
-    for (const noeud in reseau) {
+function isFranchissable(currentReseau, transitionId) {
+    for (const noeud in currentReseau) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
 
-            const arcs = reseau[noeud].slice(1);
+            const arcs = currentReseau[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
@@ -191,7 +227,7 @@ function isFranchissable(reseau, transitionId) {
                 }
             }
             
-            if (total_poids > 0 && reseau[noeud][0] < total_poids) {
+            if (total_poids > 0 && currentReseau[noeud][0] < total_poids) {
                 return false;
             }
         }
@@ -233,12 +269,14 @@ function echangeRessources(reseau, transitionId) {
             }
         }
     }
-    
+
     const sortiesTransition = reseau[transitionId].slice(1);
     for (const arc of sortiesTransition) {
         const [destination, poids] = arc;
         reseau[destination][0] += poids;
     }
+
+    return reseau
 }
 
 /*
@@ -257,7 +295,7 @@ Relations: Appelée après des simulations pour détecter l'arrêt du système. 
 function isDeadlock(reseau) {
     for (const noeud in reseau) {
         if (noeud.startsWith("T")) {
-            if (isFranchissable(reseau, noeud)) {
+            if (isFranchissable(currentReseau, noeud)) {
                 return false;
             }
         }
@@ -332,24 +370,6 @@ function isBorne(graph, borneMax) {
     }
     
     return true;
-}
-
-/*
-simulation - Fonction principale appelée par l'UI
-Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
-Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
-Fonctionnement:
-1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
-2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
-3. Si false, ne fait rien (la transition ne peut pas être tirée)
-Usage: L'UI React appellera cette fonction quand l'utilisateur clique sur une transition dans le canvas.
-Retourne: rien (void), mais modifie reseau si la transition est franchissable
-Relations: Point d'entrée principal. Utilise isFranchissable et echangeRessources.
-*/
-function simulation(reseau, transitionId) {
-    if (isFranchissable(reseau, transitionId)) {
-        echangeRessources(reseau, transitionId);
-    }
 }
 
 /*
@@ -587,5 +607,173 @@ lignes de test pour les fonctions => les enlever avant de push ou les rajouter s
 + décommenter la ligne export
 */
 
+function puits(){
+    let puit = [];
+    // on trouve les noeuds qui n'ont pas de connexions
+    for (let node in currentReseau){
+        if (currentReseau[node].length === 1){
+            puit.push(node);
+        }
+    }
+    return puit;
+}
 
-export { reseau, isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation };
+function sources(){
+    let compare = [];
+    let source = [];
+
+    // compare <-- tous les noeuds connectés
+    for (let node in currentReseau){
+        for (let i = 1; i < currentReseau[node].length; i++){
+            if (!compare.includes(currentReseau[node][i][0])){
+                compare.push(currentReseau[node][i][0]);
+            }
+        }
+    }
+    // source <-- noeuds not in compare
+    for (let node in currentReseau){
+        if (!compare.includes(node)){
+            source.push(node);
+        }
+    }
+
+    return source;
+}
+
+//vérifie si le réseau est simple 
+function estSimple() {
+    // Pour chaque noeuds on vérifie si il n'y a pas deux liens vers le même noeud
+    for (let node in currentReseau) {
+        let liens = [];
+
+        for (let i = 1; i < currentReseau[node].length; i++) {
+            let cible = currentReseau[node][i][0];
+
+            // vérifier si la cible existe déjà dans le tableau destinations
+            for (let j = 0; j < liens.length; j++) {
+                if (liens[j] === cible) {
+                    return false;
+                }
+            }
+            liens.push(cible);
+        }
+    }
+    return true;
+}
+
+function DFS(départ) {
+    var visités = [];
+    var étatsTrouvés = [];
+    var pile = [départ];
+
+    while (pile.length > 0) {
+        var noeud = pile.pop();
+
+        if (!(visités.includes(noeud))){
+            visités.push(noeud);
+            if (noeud[0] === "E") {
+                étatsTrouvés.push(noeud);
+            }
+
+             var arcs = currentReseau[noeud];
+            for (var j = 1; j < arcs.length; j++) {
+                var voisin = arcs[j][0];
+                pile.push(voisin);
+            }
+        }
+    }
+
+    return étatsTrouvés;
+}
+
+function reachable(from, to, graph) {
+  const visited = new Set();
+  const queue = [from];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === to) return true;
+
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    (graph[current] || []).forEach(next => queue.push(next));
+  }
+  return false;
+}
+
+function isLive() {
+  // 1. Construire le graphe d’atteignabilité
+  const graph = buildReachabilityGraph(currentReseau);
+  const markings = Object.keys(graph);
+
+  // 2. Pour chaque marquage atteignable
+  for (const M of markings) {
+
+    // Reconstruire un réseau avec ce marquage
+    for (const transition in currentReseau) {
+      if (!transition.startsWith("T")) continue;
+
+      let transitionVivante = false;
+
+      // 3. Chercher un futur où la transition est franchissable
+      for (const M2 of markings) {
+        if (reachable(M, M2, graph)) {
+
+          // Recréer le réseau correspondant à M2
+          const reseauM2 = JSON.parse(JSON.stringify(currentReseau));
+          const tokens = M2.split(",").map(Number);
+
+          let i = 0;
+          for (const node in reseauM2) {
+            if (node.startsWith("E")) {
+              reseauM2[node][0] = tokens[i++];
+            }
+          }
+
+          if (isEnabled(reseauM2, transition)) {
+            transitionVivante = true;
+            break;
+          }
+        }
+      }
+
+      // 4. Transition morte → réseau non vivant
+      if (!transitionVivante) {
+        return false;
+      }
+    }
+  }
+
+  // 5. Toutes les transitions sont vivantes
+  return true;
+}
+
+/*
+simulation - Fonction principale appelée par l'UI
+Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
+Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
+Fonctionnement:
+1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
+2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
+3. Si false, ne fait rien (la transition ne peut pas être tirée)
+Usage: L'UI React appellera cette fonction quand l'utilisateur clique sur une transition dans le canvas.
+Retourne: rien (void), mais modifie reseau si la transition est franchissable
+Relations: Point d'entrée principal. Utilise isFranchissable et echangeRessources.
+*/
+function simulation(reseauLocal) {
+    let copy = structuredClone(reseauLocal);
+    let res = structuredClone(reseauLocal);
+
+    for (let elem in copy){
+        if (elem.startsWith("T")){
+            if (isFranchissable(copy, elem) && isFranchissable(res, elem)) {
+                res = echangeRessources(res, elem);
+            }
+        }
+    }
+    return res;
+}
+
+export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan, DFS, estSimple, isLive, marquageValide, puits, sources,  };
+

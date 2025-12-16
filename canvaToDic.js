@@ -45,7 +45,7 @@ function transformationIn(places, transitions, arcs) {
     }
   });
 
-  return MajReseau(reseaux);
+  return reseaux;
 }
 
 //version zoli pour afficher le dictionnaire du réseau dans la zone de texte
@@ -69,7 +69,7 @@ function formatReseau(res) {
   return `{\n${lines.join(",\n")}\n}`;
 }
 
-function transformationOut(places, transitions, arcs) {
+function transformationOut(places, transitions, arcs, reseauLocal) {
   // Reconstruction des labels
   const placeLabelToId = {};
   const transitionLabelToId = {};
@@ -88,11 +88,11 @@ function transformationOut(places, transitions, arcs) {
       l => placeLabelToId[l] === p.id
     );
 
-    if (!label || !reseau[label]) return p;
+    if (!label || !reseauLocal[label]) return p;
 
     return {
       ...p,
-      value: reseau[label][0], // nombre de jetons
+      value: reseauLocal[label][0], // nombre de jetons
     };
   });
 
@@ -124,9 +124,9 @@ function transformationOut(places, transitions, arcs) {
         );
     }
 
-    if (!fromLabel || !reseau[fromLabel]) return a;
+    if (!fromLabel || !reseauLocal[fromLabel]) return a;
 
-    const arcDef = reseau[fromLabel]
+    const arcDef = reseauLocal[fromLabel]
       .slice(1)
       .find(([dest]) => dest === toLabel);
 
