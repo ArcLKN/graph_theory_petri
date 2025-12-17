@@ -310,7 +310,6 @@ function App() {
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-<<<<<<< HEAD
 		if (handleVerif()){
 			//Construire le réseau à partir du canvas
 			const reseauLocal = transformationIn(places, transitions, arcs);
@@ -332,27 +331,6 @@ function App() {
 			setPlaces(newPlaces);
 			setArcs(newArcs);
 		}
-=======
-		// 1. Construire le réseau à partir du canvas
-		const reseauLocal = transformationIn(places, transitions, arcs);
-
-		// 2. Simuler
-		const reseauSimule = simulation(structuredClone(reseauLocal));
-
-		// 3. Mettre à jour le state réseau
-		setReseauP(reseauSimule);
-
-		// 4. Mettre à jour l'UI
-		const { places: newPlaces, arcs: newArcs } = transformationOut(
-			places,
-			transitions,
-			arcs,
-			reseauSimule
-		);
-
-		setPlaces(newPlaces);
-		setArcs(newArcs);
->>>>>>> 58c2e2113f30fa772f7268654d40436df321315c
 	};
 	/////////////////////////////
 
@@ -368,7 +346,6 @@ function App() {
 
 	//S'INSPIRER DE CA POUR LES AUTRES FONCTIONS LIEES AUX BOUTONS (efface quand tu as vu ça Julia)
 	const handleDeadlock = () => {
-<<<<<<< HEAD
 		if (handleVerif()){
 			const reseauLocal = transformationIn(places, transitions, arcs)
 			const deadlock = isDeadlock(reseauLocal);
@@ -378,13 +355,6 @@ function App() {
 			else {
 				setResult("deadlock situation");
 			}
-=======
-
-		const reseauLocal = transformationIn(places, transitions, arcs)
-		const deadlock = isDeadlock(structuredClone(reseauLocal));
-		if (!deadlock) {
-			setResult("pas de deadlock");
->>>>>>> 58c2e2113f30fa772f7268654d40436df321315c
 		}
 		return;
 	}
