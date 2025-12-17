@@ -344,7 +344,6 @@ function App() {
 		return;
 	}
 
-	//S'INSPIRER DE CA POUR LES AUTRES FONCTIONS LIEES AUX BOUTONS (efface quand tu as vu ça Julia)
 	const handleDeadlock = () => {
 		if (handleVerif()){
 			const reseauLocal = transformationIn(places, transitions, arcs)
@@ -358,6 +357,90 @@ function App() {
 		}
 		return;
 	}
+
+	const handleTarjan = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const sccs = tarjan(reseauLocal);
+			setResult(`Composantes fortement connexes: ${sccs.length} trouvées - ${JSON.stringify(sccs)}`);
+		}
+		return; 
+	}
+
+	const handleInvariantTransitions = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const hasInvariant = isInvariantTransitions(reseauLocal);
+			if(hasInvariant){
+				setResult("T-invariant détecté: le réseau peut revenir au marquage initial");
+			}
+			else {
+				setResult("Aucun T-invariant détecté");
+			}
+		}
+		return;
+	}
+
+	const handleInvariantConservation = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const isConserved = isInvariantConservation(reseauLocal);
+			if(isConserved){
+				setResult("P-invariant respecté: conservation des jetons");
+			}
+			else {
+				setResult("P-invariant non respecté: jetons créés ou détruits");
+			}
+		}
+		return;
+	}
+
+	const handleMarquageValide = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const isValid = marquageValide(reseauLocal);
+			if(isValid){
+				setResult("Marquage valide");
+			}
+			else {
+				setResult("Marquage invalide: valeurs négatives ou non entières");
+			}
+		}
+		return;
+	}
+
+	const handlePuits = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const puitsNodes = puits(reseauLocal);
+			setResult(`Puits trouvés: ${puitsNodes.join(", ") || "aucun"}`);
+		}
+		return;
+	}
+
+	const handleSources = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const sourceNodes = sources(reseauLocal);
+			setResult(`Sources trouvées: ${sourceNodes.join(", ") || "aucune"}`);
+		}
+		return;
+	}
+
+	const handleEstSimple = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const simple = estSimple(reseauLocal);
+			if(simple){
+				setResult("Réseau simple: pas d'arcs multiples entre mêmes nœuds");
+			}
+			else {
+				setResult("Réseau non simple: arcs multiples détectés");
+			}
+		}
+		return;
+	}
+
 	/////////////////////////////
 
 	return (
@@ -431,6 +514,13 @@ function App() {
 				placingPlace={placingPlace}
 				handleBorne={handleBorne}
 				handleDeadlock={handleDeadlock}
+				handleTarjan={handleTarjan}
+				handleInvariantTransitions={handleInvariantTransitions}
+				handleInvariantConservation={handleInvariantConservation}
+				handleMarquageValide={handleMarquageValide}
+				handlePuits={handlePuits}
+				handleSources={handleSources}
+				handleEstSimple={handleEstSimple}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}

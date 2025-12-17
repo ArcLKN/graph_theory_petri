@@ -26,6 +26,13 @@ export default function EditorToolbar({
 	handleDeadlock,
 	handleBorne,
 	addAnnotation,
+	handleTarjan,
+	handleInvariantTransitions,
+	handleInvariantConservation,
+	handleMarquageValide,
+	handlePuits,
+	handleSources,
+	handleEstSimple,
 }) {
 	return (
 		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
@@ -71,6 +78,13 @@ export default function EditorToolbar({
 						handleTransformationIn={handleTransformationIn}
 						handleDeadlock = {handleDeadlock}
 						handleBorne={handleBorne}
+						handleTarjan={handleTarjan}
+						handleInvariantTransitions={handleInvariantTransitions}
+						handleInvariantConservation={handleInvariantConservation}
+						handleMarquageValide={handleMarquageValide}
+						handlePuits={handlePuits}
+						handleSources={handleSources}
+						handleEstSimple={handleEstSimple}
 					/>
 
 					<ButtonGroupSeparator />
