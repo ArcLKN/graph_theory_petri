@@ -1,16 +1,45 @@
-# React + Vite
+# Petri's Graphs
+---
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modelization of Petri's graph where you can create your own, and start a simulation.
 
-Currently, two official plugins are available:
+<img width="861" height="288" alt="image" src="https://github.com/user-attachments/assets/0f71328d-d8ee-414f-9327-f5eb720dbae3" />
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Built with
+---
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 
-## React Compiler
+## Installation
+---
+To install the Petri's Graph project, follow these steps:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Clone the repository to your local machine:
+```
+git clone https://github.com/ArcLKN/graph_theory_petri.git
+```
 
-## Expanding the ESLint configuration
+3. Navigate to the project directory:
+```
+cd graph_theory_petri
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+5. Install dependencies:
+```
+npm install
+```
+
+## Usage
+---
+Run the following command to start the project:
+```
+npm run dev
+```
+
+Once the website is open, you'll have a canvas with few buttons. Here's what you can do:
+
+* Add elements like places, arcs, transitions
+* Add anotations
+* Choose between oriented / nonoriented graphs
+* Delete elements or clear the canvas
+* Run simulation
+* Change values of all elements
