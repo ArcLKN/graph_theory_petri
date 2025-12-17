@@ -27,7 +27,7 @@ import {
 	sources,
 	estSimple,
 	DFS,
-	isLive,
+	isLive
 } from "../petriLogic.js";
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";
@@ -270,37 +270,68 @@ function App() {
 	};
 
 	/////////// Gabriel ///////////
+	//vérifie que le réseau est valide
+	const handleVerif = () => {
+		//supprimer les potentielles erreurs précédentes
+		setResult("");
+		const reseauLocal = transformationIn(places, transitions, arcs)
+
+		const marquage = marquageValide(reseauLocal);
+		if(!marquage){
+			setResult("erreur: Le réseau de pétri n'est pas valide (nombre décimal et négatif)");
+			return false;
+		}
+		
+		const bipartite = isBipartite(reseauLocal);
+		if(!bipartite){
+			setResult("erreur: Le réseau n'est pas Bipartite");
+			return false;
+		}
+
+		const connex = isConnex(reseauLocal);
+		if(!connex){
+			setResult("erreur: le graph n'est pas connex");
+			return false;
+		}
+
+		return true;
+	}
+
 	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
 	const handleTransformationIn = () => {
-		const res = transformationIn(places, transitions, arcs);
-		setReseauP(res);
-		const formatted = formatReseau(res);
-		console.log(formatted);
-		setResult(formatted);
+		if (handleVerif()){
+			const res = transformationIn(places, transitions, arcs);
+			setReseauP(res);
+			const formatted = formatReseau(res);
+			console.log(formatted);
+			setResult(formatted);
+		}
 	};
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-    // 1. Construire le réseau à partir du canvas
-    const reseauLocal = transformationIn(places, transitions, arcs) ;
+		if (handleVerif()){
+			//Construire le réseau à partir du canvas
+			const reseauLocal = transformationIn(places, transitions, arcs);
 
-    // 2. Simuler
-    const reseauSimule = simulation(structuredClone(reseauLocal));
+			// Simuler
+			const reseauSimule = simulation(structuredClone(reseauLocal));
 
-    // 3. Mettre à jour le state réseau
-    setReseauP(reseauSimule);
+			// Mettre à jour le state réseau
+			setReseauP(reseauSimule);
 
-    // 4. Mettre à jour l'UI
-    const { places: newPlaces, arcs: newArcs } = transformationOut(
-        places,
-        transitions,
-        arcs,
-        reseauSimule
-    );
+			// Mettre à jour l'UI
+			const { places: newPlaces, arcs: newArcs } = transformationOut(
+				places,
+				transitions,
+				arcs,
+				reseauSimule
+			);
 
-    setPlaces(newPlaces);
-    setArcs(newArcs);
-};
+			setPlaces(newPlaces);
+			setArcs(newArcs);
+		}
+	};
 	/////////////////////////////
 
 	const handleBorne = () => {
@@ -313,14 +344,18 @@ function App() {
 		return;
 	}
 
+	//S'INSPIRER DE CA POUR LES AUTRES FONCTIONS LIEES AUX BOUTONS (efface quand tu as vu ça Julia)
 	const handleDeadlock = () => {
-		
-		const reseauLocal = transformationIn(places, transitions, arcs)
-		const deadlock = isDeadlock(structuredClone(reseauLocal));
-		if(!deadlock){
-			setResult("pas de deadlock");
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs)
+			const deadlock = isDeadlock(reseauLocal);
+			if(!deadlock){
+				setResult("pas de deadlock");
+			}
+			else {
+				setResult("deadlock situation");
+			}
 		}
-		else (setResult("deadlock situation"))
 		return;
 	}
 	/////////////////////////////

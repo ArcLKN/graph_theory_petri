@@ -1,3 +1,5 @@
+import { valDepart, etatDepart } from "./varGlobales";
+
 var reseau = { 
     "E1": [10, ["T1", 2]], 
     "T1": [0, ["E2", 1], ["E4", 1]], 
@@ -7,13 +9,6 @@ var reseau = {
     "E3": [0], 
     "E5": [0]
 };
-
-var etatDepart;
-etatDepart = "E1";
-
-var valDepart;
-valDepart = 10;
-
 /*
 isBipartite - Vérifie que le réseau Petri est bien structuré
 Description: Un réseau valide a deux groupes : les états (E) sont toujours connectés à des transitions (T), et inversement.
@@ -80,9 +75,9 @@ Méthode: Vérifie pour chaque état et transition que la valeur associée est d
 Retourne: booléen (true si tous les marquages sont valides, false sinon)
 Relations: Fonction de validation, utilisée avant le lancement de la simulation
 */
-function marquageValide() {
+function marquageValide(reseau) {
 
-  if (!currentReseau.hasOwnProperty(etatDepart)) {
+  if (!reseau.hasOwnProperty(etatDepart)) {
     return false;
   }
 
@@ -90,8 +85,8 @@ function marquageValide() {
     return false;
   }
 
-  for (const noeud in currentReseau) {
-    const valeur = currentReseau[noeud][0];
+  for (const noeud in reseau) {
+    const valeur = reseau[noeud][0];
 
     if (!Number.isInteger(valeur) || valeur < 0) {
       return false;
@@ -754,6 +749,7 @@ simulation - Fonction principale appelée par l'UI
 Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
 Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
 Fonctionnement:
+1. crée deux clones du réseau (nécéssaire) l'un pour trouver toutes les transitions faisables à l'instant T et l'auter pout les modifiers
 1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
 2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
 3. Si false, ne fait rien (la transition ne peut pas être tirée)
@@ -775,5 +771,5 @@ function simulation(reseauLocal) {
     return res;
 }
 
-export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan, DFS, estSimple, isLive, marquageValide, puits, sources,  };
+export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan, DFS, estSimple, isLive, marquageValide, puits, sources, reseau };
 
