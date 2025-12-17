@@ -281,48 +281,21 @@ function App() {
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-    // transformation en dictionnaire
-    handleTransformationIn();
-	// Déclaration et copie du réseau actuel
-    let currentReseau = structuredClone(reseauP);
+    // 1. Construire le réseau à partir du canvas
+    const reseauLocal = transformationIn(places, transitions, arcs);
 
-	/*
-    // vérification bipartite
-    const marquage = marquageValide();
-    if (!marquage) {
-        setResult(
-            "erreur: Le réseau n'est pas valide ! (transition < 0 ou jeton d'un état n'est pas un nombre)"
-        );
-        return;
-    }
+    // 2. Simuler
+    const reseauSimule = simulation(structuredClone(reseauLocal));
 
-    const bipartite = isBipartite();
-    if (!bipartite) {
-        setResult(
-            "erreur: Deux Transitions ou deux Etats connectés ensemble !"
-        );
-        return;
-    }
+    // 3. Mettre à jour le state réseau
+    setReseauP(reseauSimule);
 
-    const connex = isConnex();
-    if (!connex) {
-        setResult("erreur: Le réseau n'est pas connex !");
-        return;
-    }
-		*/
-
-    // Simulation sur chaque transition
-    currentReseau = simulation(currentReseau);
-
-    // Mettre à jour le state avec le réseau simulé
-    setReseauP(currentReseau);
-
-    // Mettre à jour places et arcs si besoin
+    // 4. Mettre à jour l'UI
     const { places: newPlaces, arcs: newArcs } = transformationOut(
         places,
         transitions,
         arcs,
-        currentReseau
+        reseauSimule
     );
 
     setPlaces(newPlaces);
