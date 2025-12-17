@@ -102,7 +102,7 @@ function App() {
 
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
-	const [reseauP, setReseauP] = useState(reseau)	
+	const [reseauP, setReseauP] = useState(reseau)
 
 	const selectedPlace =
 		places.find((place) => place.id === selectedElement) || null;
@@ -172,10 +172,10 @@ function App() {
 				prev.map((place) =>
 					place.id === movingPlaceId
 						? {
-								...place,
-								x: mousePos.x - 16,
-								y: mousePos.y - 16,
-						  }
+							...place,
+							x: mousePos.x - 16,
+							y: mousePos.y - 16,
+						}
 						: place
 				)
 			);
@@ -183,10 +183,10 @@ function App() {
 				prev.map((transition) =>
 					transition.id === movingPlaceId
 						? {
-								...transition,
-								x: mousePos.x - 16,
-								y: mousePos.y - 16,
-						  }
+							...transition,
+							x: mousePos.x - 16,
+							y: mousePos.y - 16,
+						}
 						: transition
 				)
 			);
@@ -281,32 +281,32 @@ function App() {
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-    // 1. Construire le réseau à partir du canvas
-    const reseauLocal = transformationIn(places, transitions, arcs) ;
+		// 1. Construire le réseau à partir du canvas
+		const reseauLocal = transformationIn(places, transitions, arcs);
 
-    // 2. Simuler
-    const reseauSimule = simulation(structuredClone(reseauLocal));
+		// 2. Simuler
+		const reseauSimule = simulation(structuredClone(reseauLocal));
 
-    // 3. Mettre à jour le state réseau
-    setReseauP(reseauSimule);
+		// 3. Mettre à jour le state réseau
+		setReseauP(reseauSimule);
 
-    // 4. Mettre à jour l'UI
-    const { places: newPlaces, arcs: newArcs } = transformationOut(
-        places,
-        transitions,
-        arcs,
-        reseauSimule
-    );
+		// 4. Mettre à jour l'UI
+		const { places: newPlaces, arcs: newArcs } = transformationOut(
+			places,
+			transitions,
+			arcs,
+			reseauSimule
+		);
 
-    setPlaces(newPlaces);
-    setArcs(newArcs);
-};
+		setPlaces(newPlaces);
+		setArcs(newArcs);
+	};
 	/////////////////////////////
 
 	const handleBorne = () => {
 
 		const borne = isBorne();
-		if(!borne){
+		if (!borne) {
 			setResult("Dépassement de borne");
 		}
 		else (setResult("On est bien k-borné"))
@@ -314,10 +314,10 @@ function App() {
 	}
 
 	const handleDeadlock = () => {
-		
+
 		const reseauLocal = transformationIn(places, transitions, arcs)
 		const deadlock = isDeadlock(structuredClone(reseauLocal));
-		if(!deadlock){
+		if (!deadlock) {
 			setResult("pas de deadlock");
 		}
 		else (setResult("deadlock situation"))
@@ -375,9 +375,9 @@ function App() {
 					}}
 				/>
 			)}
-			<div>
-				<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
-			</div>
+
+			{/* Header */}
+			<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
 
 			<EditorToolbar
 				doSimulation={doSimulation}
@@ -489,61 +489,61 @@ function App() {
 					)}
 					{/* Annotations existantes */}
 					{annotations.map((ann) => (
-					<text
-						key={ann.id}
-						x={ann.x}
-						y={ann.y}
-						fontSize={16}
-						style={{ cursor: "pointer", userSelect: "none" }}
-						pointerEvents="all"
-						onMouseDown={(e) => {
-						e.stopPropagation();
-						setSelectedAnnotation(ann);
+						<text
+							key={ann.id}
+							x={ann.x}
+							y={ann.y}
+							fontSize={16}
+							style={{ cursor: "pointer", userSelect: "none" }}
+							pointerEvents="all"
+							onMouseDown={(e) => {
+								e.stopPropagation();
+								setSelectedAnnotation(ann);
 
-						const svg = e.currentTarget.ownerSVGElement;
-						const rect = svg.getBoundingClientRect();
-						const offsetX = e.clientX - rect.left - ann.x;
-						const offsetY = e.clientY - rect.top - ann.y;
+								const svg = e.currentTarget.ownerSVGElement;
+								const rect = svg.getBoundingClientRect();
+								const offsetX = e.clientX - rect.left - ann.x;
+								const offsetY = e.clientY - rect.top - ann.y;
 
-						const handleDrag = (ev) => {
-							const newX = ev.clientX - rect.left - offsetX;
-							const newY = ev.clientY - rect.top - offsetY;
-							setAnnotations((prev) =>
-							prev.map((a) =>
-								a.id === ann.id ? { ...a, x: newX, y: newY } : a
-							)
-							);
-						};
+								const handleDrag = (ev) => {
+									const newX = ev.clientX - rect.left - offsetX;
+									const newY = ev.clientY - rect.top - offsetY;
+									setAnnotations((prev) =>
+										prev.map((a) =>
+											a.id === ann.id ? { ...a, x: newX, y: newY } : a
+										)
+									);
+								};
 
-						const handleDragEnd = () => {
-							window.removeEventListener("mousemove", handleDrag);
-							window.removeEventListener("mouseup", handleDragEnd);
-						};
+								const handleDragEnd = () => {
+									window.removeEventListener("mousemove", handleDrag);
+									window.removeEventListener("mouseup", handleDragEnd);
+								};
 
-						window.addEventListener("mousemove", handleDrag);
-						window.addEventListener("mouseup", handleDragEnd);
-						}}
-						onClick={(e) => {
-							e.stopPropagation();
-							setSelectedAnnotation(ann);
-							setIsTextBoxOpen(true);
-						}}
-					>
-						{ann.text}
-					</text>
+								window.addEventListener("mousemove", handleDrag);
+								window.addEventListener("mouseup", handleDragEnd);
+							}}
+							onClick={(e) => {
+								e.stopPropagation();
+								setSelectedAnnotation(ann);
+								setIsTextBoxOpen(true);
+							}}
+						>
+							{ann.text}
+						</text>
 					))}
 
 					{/* Texte fantôme lors du placement */}
 					{placingAnnotation && pendingAnnotation && (
-					<text
-						x={mousePos.x}
-						y={mousePos.y}
-						fontSize={16}
-						fill="rgba(0,0,0,0.3)"
-						pointerEvents="none"
-					>
-						{pendingAnnotation.text}
-					</text>
+						<text
+							x={mousePos.x}
+							y={mousePos.y}
+							fontSize={16}
+							fill="rgba(0,0,0,0.3)"
+							pointerEvents="none"
+						>
+							{pendingAnnotation.text}
+						</text>
 					)}
 				</svg>
 
@@ -625,11 +625,10 @@ function App() {
 
 						<div
 							key={place.id}
-							className={`absolute flex items-center justify-center w-8 h-8 rounded-full hover:border-2 hover:border-blue-500 ${
-								selectedElement === place.id
-									? "bg-blue-500"
-									: "bg-gray-500"
-							}`}
+							className={`absolute flex items-center justify-center w-8 h-8 rounded-full hover:border-2 hover:border-blue-500 ${selectedElement === place.id
+								? "bg-blue-500"
+								: "bg-gray-500"
+								}`}
 							style={{ left: place.x, top: place.y }}
 							onClick={() => {
 								if (!creatingArc) {
@@ -837,6 +836,8 @@ function App() {
 					);
 				})}
 			</div>
+
+			{/* Result area */}
 			<Textarea
 				placeholder='Results will be here.'
 				disabled
