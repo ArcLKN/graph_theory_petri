@@ -1,16 +1,36 @@
-# React + Vite
+# Petri's Graphs
+---
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modelization of Petri's graph where you can create your own, and start a simulation.
+<img width="861" height="288" alt="image" src="https://github.com/user-attachments/assets/0f71328d-d8ee-414f-9327-f5eb720dbae3" />
 
-Currently, two official plugins are available:
+## Built with
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Installation
+---
+To install the Petri's Graph project, follow these steps:
 
-## React Compiler
+1. Clone the repository to your local machine:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Navigate to the project directory:
+```cd graph_theory_petri```
 
-## Expanding the ESLint configuration
+3. Install dependencies:
+```npm install```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Usage
+---
+Run the following command to start the project:
+```npm run dev```
+
+Once the website is open, you'll have a canvas with few buttons. Here's what you can do:
+
+* Add elements like places, arcs, transitions
+* Add anotations
+* Choose between oriented / nonoriented graphs
+* Delete elements or clear the canvas
+* Run simulation
+* Change values of all elements
+
+## Contributors
