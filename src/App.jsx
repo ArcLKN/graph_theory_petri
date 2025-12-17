@@ -272,7 +272,7 @@ function App() {
 	/////////// Gabriel ///////////
 	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
 	const handleTransformationIn = () => {
-			const res = transformationIn(places, transitions, arcs);
+		const res = transformationIn(places, transitions, arcs);
 		setReseauP(res);
 		const formatted = formatReseau(res);
 		console.log(formatted);
