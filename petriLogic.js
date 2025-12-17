@@ -295,7 +295,7 @@ Relations: Appelée après des simulations pour détecter l'arrêt du système. 
 function isDeadlock(reseau) {
     for (const noeud in reseau) {
         if (noeud.startsWith("T")) {
-            if (isFranchissable(currentReseau, noeud)) {
+            if (isFranchissable(reseau, noeud)) {
                 return false;
             }
         }

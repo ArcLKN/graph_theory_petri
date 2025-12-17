@@ -282,7 +282,7 @@ function App() {
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
     // 1. Construire le réseau à partir du canvas
-    const reseauLocal = transformationIn(places, transitions, arcs);
+    const reseauLocal = transformationIn(places, transitions, arcs) ;
 
     // 2. Simuler
     const reseauSimule = simulation(structuredClone(reseauLocal));
@@ -301,7 +301,6 @@ function App() {
     setPlaces(newPlaces);
     setArcs(newArcs);
 };
-
 	/////////////////////////////
 
 	const handleBorne = () => {
@@ -315,15 +314,15 @@ function App() {
 	}
 
 	const handleDeadlock = () => {
-
-		const deadlock = isDeadlock();
+		
+		const reseauLocal = transformationIn(places, transitions, arcs)
+		const deadlock = isDeadlock(structuredClone(reseauLocal));
 		if(!deadlock){
 			setResult("pas de deadlock");
 		}
 		else (setResult("deadlock situation"))
 		return;
 	}
-
 	/////////////////////////////
 
 	return (
