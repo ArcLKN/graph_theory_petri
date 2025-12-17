@@ -326,7 +326,7 @@ function App() {
 	/////////////////////////////
 
 	return (
-		<div className='w-screen h-screen App px-16 py-4 space-y-4'>
+		<div className='w-screen h-screen App px-16 py-4 space-y-4 bg-white'>
 			{isDialogBoxOpen && selectedItem && (
 				<ChangeValueDialogBox
 					setDialogBoxIsOpen={setDialogBoxIsOpen}
@@ -840,9 +840,8 @@ function App() {
 			{/* Result area */}
 			<Textarea
 				placeholder='Results will be here.'
-				disabled
 				value={result}
-				className='w-full h-24 text-black'
+				className='bg-white w-full h-24 text-black'
 			/>
 		</div>
 	);
