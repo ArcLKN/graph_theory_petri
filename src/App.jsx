@@ -523,12 +523,11 @@ function App() {
 						y={ann.y}
 						fontSize={16}
 						style={{ cursor: "pointer", userSelect: "none" }}
-						pointerEvents="all" // ⚠️ important pour recevoir les clics
+						pointerEvents="all"
 						onMouseDown={(e) => {
 						e.stopPropagation();
 						setSelectedAnnotation(ann);
 
-						// calculer offset entre souris et position du texte
 						const svg = e.currentTarget.ownerSVGElement;
 						const rect = svg.getBoundingClientRect();
 						const offsetX = e.clientX - rect.left - ann.x;
