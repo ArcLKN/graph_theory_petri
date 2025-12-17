@@ -60,16 +60,14 @@ function addTransition(setTransitions, mousePos) {
 	]);
 }
 
-function addAnnotation() {
-	// Logic to add an annotation to the Pétri Network
-	setTransitions((prevTransitions) => [
-		...prevTransitions,
+function addAnnotation(setAnnotations, mousePos) {
+	setAnnotations((prevAnnotations) => [
+		...prevAnnotations,
 		{
 			id: Date.now(),
-			x: mousePos.x - 20,
-			y: mousePos.y - 30,
-			width: 20,
-			height: 60,
+			x: mousePos.x,
+			y: mousePos.y,
+			text: "New annotation",
 		},
 	]);
 }
@@ -91,6 +89,7 @@ function App() {
 
 	const [placingAnnotation, setPlacingAnnotation] = useState(false);
 	const [selectedAnnotation, setSelectedAnnotation] = useState(null);
+	const [pendingAnnotation, setPendingAnnotation] = useState(null);
 	const [annotations, setAnnotations] = useState([]);
 	const [movingAnnotationId, setMovingAnnotationId] = useState(null);
 	const [isTextBoxOpen, setIsTextBoxOpen] = useState(false);
@@ -201,6 +200,22 @@ function App() {
 		} else if (placingTransition) {
 			addTransition(setTransitions, mousePos);
 			setPlacingTransition(false);
+			return;
+		} else if (placingAnnotation && pendingAnnotation) {
+			setAnnotations((prev) => [
+				...prev,
+				{
+					...pendingAnnotation,
+					x: mousePos.x,
+					y: mousePos.y,
+				},
+			]);
+
+			setPendingAnnotation(null);
+			setPlacingAnnotation(false);
+			return;
+		} else if (movingAnnotationId) {
+			setMovingAnnotationId(null);
 			return;
 		}
 	};
@@ -352,16 +367,35 @@ function App() {
 			{isTextBoxOpen && (
 				<ChangeTextDialogBox
 					setDialogBoxIsOpen={setIsTextBoxOpen}
-					previousText={""}
+					previousText={selectedAnnotation?.text ?? ""}
 					onSave={(text) => {
-					setAnnotations((prev) =>
-						prev.map((ann) =>
-						ann.id === selectedAnnotation.id ? { ...ann, text } : ann
-						)
-					);
+
+						if (!selectedAnnotation) {
+							if (!selectedAnnotation) {
+								const newAnn = {
+									id: Date.now(),
+									text,
+								};
+								setPendingAnnotation(newAnn);
+								setPlacingAnnotation(true); // active le mode placement
+								setSelectedAnnotation(newAnn); // pour que le texte fantôme soit aussi sélectionné
+							}
+						}
+
+						else {
+							setAnnotations((prev) =>
+								prev.map((ann) =>
+									ann.id === selectedAnnotation.id
+										? { ...ann, text }
+										: ann
+								)
+							);
+						}
+
+						setIsTextBoxOpen(false);
 					}}
 				/>
-				)}
+			)}
 			<div>
 				<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
 			</div>
@@ -468,11 +502,70 @@ function App() {
 							y={mousePos.y - 30}
 							width={20}
 							height={60}
-							fill='rgba(0,0,0,0.2)' // rectangle fantôme pendant le placement
+							fill='rgba(0,0,0,0.2)'
 							stroke='black'
 							strokeWidth='2'
 							pointerEvents='none'
 						/>
+					)}
+					{/* Annotations existantes */}
+					{annotations.map((ann) => (
+					<text
+						key={ann.id}
+						x={ann.x}
+						y={ann.y}
+						fontSize={16}
+						style={{ cursor: "pointer", userSelect: "none" }}
+						pointerEvents="all" // ⚠️ important pour recevoir les clics
+						onMouseDown={(e) => {
+						e.stopPropagation();
+						setSelectedAnnotation(ann);
+
+						// calculer offset entre souris et position du texte
+						const svg = e.currentTarget.ownerSVGElement;
+						const rect = svg.getBoundingClientRect();
+						const offsetX = e.clientX - rect.left - ann.x;
+						const offsetY = e.clientY - rect.top - ann.y;
+
+						const handleDrag = (ev) => {
+							const newX = ev.clientX - rect.left - offsetX;
+							const newY = ev.clientY - rect.top - offsetY;
+							setAnnotations((prev) =>
+							prev.map((a) =>
+								a.id === ann.id ? { ...a, x: newX, y: newY } : a
+							)
+							);
+						};
+
+						const handleDragEnd = () => {
+							window.removeEventListener("mousemove", handleDrag);
+							window.removeEventListener("mouseup", handleDragEnd);
+						};
+
+						window.addEventListener("mousemove", handleDrag);
+						window.addEventListener("mouseup", handleDragEnd);
+						}}
+						onClick={(e) => {
+							e.stopPropagation();
+							setSelectedAnnotation(ann);
+							setIsTextBoxOpen(true);
+						}}
+					>
+						{ann.text}
+					</text>
+					))}
+
+					{/* Texte fantôme lors du placement */}
+					{placingAnnotation && pendingAnnotation && (
+					<text
+						x={mousePos.x}
+						y={mousePos.y}
+						fontSize={16}
+						fill="rgba(0,0,0,0.3)"
+						pointerEvents="none" // ⛔ le fantôme ne bloque pas les clics
+					>
+						{pendingAnnotation.text}
+					</text>
 					)}
 				</svg>
 

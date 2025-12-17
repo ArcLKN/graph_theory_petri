@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export function ChangeTextDialogBox({
@@ -7,6 +7,10 @@ export function ChangeTextDialogBox({
 	onSave,
 }) {
 	const [inputText, setInputText] = useState(previousText);
+
+	useEffect(() => {
+		setInputText(previousText);
+	}, [previousText]);
 
 	return (
 		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
