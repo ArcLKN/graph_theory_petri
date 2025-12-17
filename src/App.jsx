@@ -148,9 +148,16 @@ function App() {
 	};
 
 	const handleDeleteAll = () => {
-		setPlaces([]);
-		setArcs([]);
-		setTransitions([]);
+		setPlaces([]);           // Supprime tous les places
+		setTransitions([]);      // Supprime toutes les transitions
+		setArcs([]);             // Supprime tous les arcs
+		setAnnotations([]);      // Supprime toutes les annotations
+		setPendingAnnotation(null); // Réinitialise le texte en cours de placement
+		setSelectedElement(null);   // Désélectionne tout
+		setSelectedAnnotation(null); // Désélectionne une annotation
+		setPlacingPlace(false);
+		setPlacingTransition(false);
+		setPlacingAnnotation(false);
 	};
 
 	const handleDeleteArcs = () => {
@@ -562,7 +569,7 @@ function App() {
 						y={mousePos.y}
 						fontSize={16}
 						fill="rgba(0,0,0,0.3)"
-						pointerEvents="none" // ⛔ le fantôme ne bloque pas les clics
+						pointerEvents="none"
 					>
 						{pendingAnnotation.text}
 					</text>
