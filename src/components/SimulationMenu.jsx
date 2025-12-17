@@ -37,7 +37,7 @@ export default function SimulationMenu({ setResult, handleTransformationIn, hand
 					Y
 				</DropdownMenuItem>
 				<DropdownMenuItem onClick={handleTransformationIn}>
-					Transformer le réseau
+					Dictionnaire du réseau
 				</DropdownMenuItem>
 				<DropdownMenuItem onClick={handleDeadlock}>
 					Vérifier Deadlock situation
