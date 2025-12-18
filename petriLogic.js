@@ -256,16 +256,13 @@ function echangeRessources(reseau, transitionId) {
 
 /*
 isDeadlock - Détecte si le système est bloqué définitivement
-Description: Parcourt toutes les transitions et vérifie si au moins une est franchissable.
-Si aucune transition n'est tirable, le système est en deadlock (arrêt définitif).
-Fonctionnement:
-1. Parcourt tous les nœuds du réseau
-2. Pour chaque transition (T), appelle isFranchissable
-3. Si au moins une transition est franchissable, retourne false (pas de deadlock)
-4. Si toutes les transitions sont infranchissables, retourne true (deadlock détecté)
-Importance: Un deadlock signifie que le système ne peut plus évoluer. C'est un état terminal indésirable dans beaucoup de systèmes.
-Retourne: booléen (true si deadlock détecté, false si au moins une transition est franchissable)
-Relations: Appelée après des simulations pour détecter l'arrêt du système. Utilise isFranchissable.
+Description: Vérifie si au moins une transition reste franchissable. Si toutes les transitions sont bloquées, le système ne peut plus 
+évoluer donc c'est un deadlock, un état terminal généralement indésirable.
+Fonctionnement: Parcourt toutes les transitions du réseau et appelle isFranchissable sur chacune. Dès qu'une transition est 
+franchissable, retourne false (pas de deadlock). Si la boucle complète sans trouver de transition franchissable, retourne true 
+(deadlock détecté).
+Retourne: booléen (true si toutes transitions bloquées donc deadlock, false si au moins une transition reste tirable)
+Relations: Appelée après simulations ou lors de l'analyse du réseau. Dépend de isFranchissable pour tester chaque transition.
 */
 function isDeadlock(reseau) {
     for (const noeud in reseau) {
@@ -279,23 +276,15 @@ function isDeadlock(reseau) {
 }
 
 /*
-isBorne - Vérifie qu'aucun état ne peut accumuler trop de jetons
-Description: Simule plusieurs tirs de transitions pour explorer l'espace d'états et détecter si un état dépasse borneMax.
-Importance: Une simple vérification de l'état actuel ne suffit pas. Le réseau pourrait avoir E1=5 au départ mais après 10 tirs, E1=50.
-Fonctionnement:
-1. Démarre avec le marquage initial
-2. Utilise une queue FIFO (BFS complète) pour explorer TOUS les marquages possibles
-3. Pour chaque marquage de la queue (jusqu'à maxIterations=1000):
-   a. Vérifie si un état > borneMax → retourne false immédiatement
-   b. Trouve toutes les transitions franchissables
-   c. Pour chaque transition franchissable, simule son tir avec calculNouveauMarquage
-   d. Ajoute les nouveaux marquages uniques à la queue (évite boucles infinies avec Set)
-4. Si aucun dépassement trouvé après exploration complète → retourne true
-Méthode: Utilise BFS avec queue FIFO pour explorer tout l'espace d'états. Set de marquages visités pour éviter de revisiter les mêmes états.
-Particularités gérées: Cycles accumulateurs, branches parallèles, réseaux complexes.
-Paramètres: graph (réseau), borneMax (limite de jetons par état), maxIterations (limite d'exploration, défaut=5000)
-Retourne: booléen (false si un état dépasse borneMax, true si tous respectent la borne)
-Relations: Utilise calculNouveauMarquage pour simulations hypothétiques sans modifier le réseau réel.
+isBorne - Vérifie qu'aucun état ne peut accumuler infiniment de jetons
+Description: Explore tous les marquages atteignables pour détecter si un état peut dépasser la borne maximale autorisée. 
+Une vérification instantanée ne suffit pas car un état pourrait avoir 5 jetons maintenant mais monter à 100 après une séquence de tirs.
+Fonctionnement: Utilise BFS avec queue pour explorer l'espace d'états complet. Pour chaque marquage exploré, vérifie qu'aucun 
+état ne dépasse borneMax. Pour chaque transition franchissable, calcule le nouveau marquage avec calculNouveauMarquage et l'ajoute 
+à la queue si pas déjà visité. Un Set évite de revisiter les mêmes marquages (terminaison garantie).
+Point important: Explore tout l'espace d'états accessible, pas juste le marquage actuel. Peut prendre du temps sur de gros réseaux.
+Retourne: booléen (false si un état peut dépasser borneMax, true si le réseau respecte toujours la borne)
+Relations: Utilise marquageInitial pour démarrer et calculNouveauMarquage pour simuler les tirs. Fonctionne de façon indépendante.
 */
 function isBorne(graph, borneMax) {
     const marquageInitial_debut = marquageInitial(graph);
