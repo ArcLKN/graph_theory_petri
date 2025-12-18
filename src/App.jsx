@@ -321,6 +321,29 @@ function App() {
 		return () => clearInterval(interval);
 	}, [doSimulation, places, transitions, arcs]);
 
+	const nextStepSimulation = () => {
+		if (!handleVerif) return;
+		//Construire le réseau à partir du canvas
+		const reseauLocal = transformationIn(places, transitions, arcs);
+
+		// Simuler
+		const reseauSimule = simulation(structuredClone(reseauLocal));
+
+		// Mettre à jour le state réseau
+		setReseauP(reseauSimule);
+
+		// Mettre à jour l'UI
+		const { places: newPlaces, arcs: newArcs } = transformationOut(
+			places,
+			transitions,
+			arcs,
+			reseauSimule
+		);
+
+		setPlaces(newPlaces);
+		setArcs(newArcs);
+	};
+
 	/////////////////////////////
 
 	const handleBorne = () => {
@@ -513,6 +536,7 @@ function App() {
 				handleSources={handleSources}
 				handleEstSimple={handleEstSimple}
 				setSimulationSpeed={setSimulationSpeed}
+				nextStepSimulation={nextStepSimulation}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}

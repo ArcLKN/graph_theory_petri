@@ -34,6 +34,7 @@ export default function EditorToolbar({
 	handleSources,
 	handleEstSimple,
 	setSimulationSpeed,
+	nextStepSimulation,
 }) {
 	return (
 		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
@@ -86,6 +87,13 @@ export default function EditorToolbar({
 							}
 						/>
 					</div>
+
+					<Button
+						className='bg-blue-300 text-foreground hover:bg-blue-400  hover:text-accent-foreground'
+						onClick={nextStepSimulation}
+					>
+						Next Step
+					</Button>
 
 					<SimulationMenu
 						setResult={setResult}
