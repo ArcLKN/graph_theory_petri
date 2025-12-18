@@ -26,7 +26,7 @@ export default function AnnotationMenu({ addAnnotation }) {
 
 				<DropdownMenuItem
 					onClick={() => 
-                        addAnnotation()
+                        addAnnotation( )
                     }
 				>
 					Text

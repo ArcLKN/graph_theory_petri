@@ -26,6 +26,13 @@ export default function EditorToolbar({
 	handleDeadlock,
 	handleBorne,
 	addAnnotation,
+	handleTarjan,
+	handleInvariantTransitions,
+	handleInvariantConservation,
+	handleMarquageValide,
+	handlePuits,
+	handleSources,
+	handleEstSimple,
 }) {
 	return (
 		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
@@ -53,8 +60,7 @@ export default function EditorToolbar({
 					>
 						Add Arc
 					</Button>
-					<AnnotationMenu addAnnotation={addAnnotation}  />
-					
+					<AnnotationMenu addAnnotation={addAnnotation} />
 
 					<ButtonGroupSeparator />
 
@@ -69,20 +75,24 @@ export default function EditorToolbar({
 					<SimulationMenu
 						setResult={setResult}
 						handleTransformationIn={handleTransformationIn}
-						handleDeadlock = {handleDeadlock}
+						handleDeadlock={handleDeadlock}
 						handleBorne={handleBorne}
+						handleTarjan={handleTarjan}
+						handleInvariantTransitions={handleInvariantTransitions}
+						handleInvariantConservation={
+							handleInvariantConservation
+						}
+						handleMarquageValide={handleMarquageValide}
+						handlePuits={handlePuits}
+						handleSources={handleSources}
+						handleEstSimple={handleEstSimple}
 					/>
 
 					<ButtonGroupSeparator />
 
 					{/* Delete Buttons */}
+					{/*<ButtonclassName='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground'onClick={null}>Delete Element</Button>*/}
 
-					<Button
-						className='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground'
-						onClick={null}
-					>
-						Delete Element
-					</Button>
 					<Button
 						className='bg-red-400 text-foreground hover:bg-red-500 hover:text-accent-foreground'
 						onClick={handleDeleteArcs}

@@ -8,7 +8,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function SimulationMenu({ setResult, handleTransformationIn, handleDeadlock, handleBorne }) {
+export default function SimulationMenu({ 
+	setResult, 
+	handleTransformationIn, 
+	handleDeadlock, 
+	handleBorne,
+	handleTarjan,
+	handleInvariantTransitions,
+	handleInvariantConservation,
+	handleMarquageValide,
+	handlePuits,
+	handleSources,
+	handleEstSimple }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -37,7 +48,7 @@ export default function SimulationMenu({ setResult, handleTransformationIn, hand
 					Y
 				</DropdownMenuItem>
 				<DropdownMenuItem onClick={handleTransformationIn}>
-					Transformer le réseau
+					Dictionnaire du réseau
 				</DropdownMenuItem>
 				<DropdownMenuItem onClick={handleDeadlock}>
 					Vérifier Deadlock situation
@@ -45,7 +56,33 @@ export default function SimulationMenu({ setResult, handleTransformationIn, hand
 				<DropdownMenuItem onClick={handleBorne}>
 					Vérification dépassement borne
 				</DropdownMenuItem>
+				<DropdownMenuSeparator />
+				<DropdownMenuLabel>Analyse structurelle</DropdownMenuLabel>
+				<DropdownMenuItem onClick={handleTarjan}>
+					Composantes fortement connexes
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handlePuits}>
+					Trouver puits
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleSources}>
+					Trouver sources
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleEstSimple}>
+					Vérifier réseau simple
+				</DropdownMenuItem>
+				<DropdownMenuSeparator />
+				<DropdownMenuLabel>Analyse comportementale</DropdownMenuLabel>
+				<DropdownMenuItem onClick={handleInvariantTransitions}>
+					T-invariants
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleInvariantConservation}>
+					P-invariants (conservation)
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleMarquageValide}>
+					Valider marquage
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
+	
 	);
 }

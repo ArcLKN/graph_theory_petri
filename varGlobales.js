@@ -21,7 +21,6 @@ function MajValDepart(nouvelleValeur) {
 
 function MajReseau(nouveauReseau) {
   reseau = nouveauReseau;
-  return reseau;
 }
 
 export { MajValDepart, MajEtatDepart, MajReseau, valDepart, etatDepart, reseau };

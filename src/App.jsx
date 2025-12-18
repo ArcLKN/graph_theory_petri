@@ -27,7 +27,7 @@ import {
 	sources,
 	estSimple,
 	DFS,
-	isLive,
+	isLive
 } from "../petriLogic.js";
 import { reseau, etatDepart, valDepart } from "../varGlobales.js";
 import EditorToolbar from "./components/EditorToolbar.jsx";
@@ -60,16 +60,14 @@ function addTransition(setTransitions, mousePos) {
 	]);
 }
 
-function addAnnotation() {
-	// Logic to add an annotation to the Pétri Network
-	setTransitions((prevTransitions) => [
-		...prevTransitions,
+function addAnnotation(setAnnotations, mousePos) {
+	setAnnotations((prevAnnotations) => [
+		...prevAnnotations,
 		{
 			id: Date.now(),
-			x: mousePos.x - 20,
-			y: mousePos.y - 30,
-			width: 20,
-			height: 60,
+			x: mousePos.x,
+			y: mousePos.y,
+			text: "New annotation",
 		},
 	]);
 }
@@ -91,6 +89,7 @@ function App() {
 
 	const [placingAnnotation, setPlacingAnnotation] = useState(false);
 	const [selectedAnnotation, setSelectedAnnotation] = useState(null);
+	const [pendingAnnotation, setPendingAnnotation] = useState(null);
 	const [annotations, setAnnotations] = useState([]);
 	const [movingAnnotationId, setMovingAnnotationId] = useState(null);
 	const [isTextBoxOpen, setIsTextBoxOpen] = useState(false);
@@ -103,7 +102,7 @@ function App() {
 
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
-	const [reseauP, setReseauP] = useState(reseau)	
+	const [reseauP, setReseauP] = useState(reseau)
 
 	const selectedPlace =
 		places.find((place) => place.id === selectedElement) || null;
@@ -149,9 +148,16 @@ function App() {
 	};
 
 	const handleDeleteAll = () => {
-		setPlaces([]);
-		setArcs([]);
-		setTransitions([]);
+		setPlaces([]);           // Supprime tous les places
+		setTransitions([]);      // Supprime toutes les transitions
+		setArcs([]);             // Supprime tous les arcs
+		setAnnotations([]);      // Supprime toutes les annotations
+		setPendingAnnotation(null); // Réinitialise le texte en cours de placement
+		setSelectedElement(null);   // Désélectionne tout
+		setSelectedAnnotation(null); // Désélectionne une annotation
+		setPlacingPlace(false);
+		setPlacingTransition(false);
+		setPlacingAnnotation(false);
 	};
 
 	const handleDeleteArcs = () => {
@@ -166,10 +172,10 @@ function App() {
 				prev.map((place) =>
 					place.id === movingPlaceId
 						? {
-								...place,
-								x: mousePos.x - 16,
-								y: mousePos.y - 16,
-						  }
+							...place,
+							x: mousePos.x - 16,
+							y: mousePos.y - 16,
+						}
 						: place
 				)
 			);
@@ -177,10 +183,10 @@ function App() {
 				prev.map((transition) =>
 					transition.id === movingPlaceId
 						? {
-								...transition,
-								x: mousePos.x - 16,
-								y: mousePos.y - 16,
-						  }
+							...transition,
+							x: mousePos.x - 16,
+							y: mousePos.y - 16,
+						}
 						: transition
 				)
 			);
@@ -201,6 +207,22 @@ function App() {
 		} else if (placingTransition) {
 			addTransition(setTransitions, mousePos);
 			setPlacingTransition(false);
+			return;
+		} else if (placingAnnotation && pendingAnnotation) {
+			setAnnotations((prev) => [
+				...prev,
+				{
+					...pendingAnnotation,
+					x: mousePos.x,
+					y: mousePos.y,
+				},
+			]);
+
+			setPendingAnnotation(null);
+			setPlacingAnnotation(false);
+			return;
+		} else if (movingAnnotationId) {
+			setMovingAnnotationId(null);
 			return;
 		}
 	};
@@ -248,71 +270,74 @@ function App() {
 	};
 
 	/////////// Gabriel ///////////
+	//vérifie que le réseau est valide
+	const handleVerif = () => {
+		//supprimer les potentielles erreurs précédentes
+		setResult("");
+		const reseauLocal = transformationIn(places, transitions, arcs)
+
+		const marquage = marquageValide(reseauLocal);
+		if(!marquage){
+			setResult("erreur: Le réseau de pétri n'est pas valide (nombre décimal et négatif)");
+			return false;
+		}
+		
+		const bipartite = isBipartite(reseauLocal);
+		if(!bipartite){
+			setResult("erreur: Le réseau n'est pas Bipartite");
+			return false;
+		}
+
+		const connex = isConnex(reseauLocal);
+		if(!connex){
+			setResult("erreur: le graph n'est pas connex");
+			return false;
+		}
+
+		return true;
+	}
+
 	// fonction pour envoyer les places,transitions,arcs au canvaToDic.js
 	const handleTransformationIn = () => {
+		if (handleVerif()){
 			const res = transformationIn(places, transitions, arcs);
-		setReseauP(res);
-		const formatted = formatReseau(res);
-		console.log(formatted);
-		setResult(formatted);
+			setReseauP(res);
+			const formatted = formatReseau(res);
+			console.log(formatted);
+			setResult(formatted);
+		}
 	};
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-    // transformation en dictionnaire
-    handleTransformationIn();
-	// Déclaration et copie du réseau actuel
-    let currentReseau = structuredClone(reseauP);
+		if (handleVerif()){
+			//Construire le réseau à partir du canvas
+			const reseauLocal = transformationIn(places, transitions, arcs);
 
-	/*
-    // vérification bipartite
-    const marquage = marquageValide();
-    if (!marquage) {
-        setResult(
-            "erreur: Le réseau n'est pas valide ! (transition < 0 ou jeton d'un état n'est pas un nombre)"
-        );
-        return;
-    }
+			// Simuler
+			const reseauSimule = simulation(structuredClone(reseauLocal));
 
-    const bipartite = isBipartite();
-    if (!bipartite) {
-        setResult(
-            "erreur: Deux Transitions ou deux Etats connectés ensemble !"
-        );
-        return;
-    }
+			// Mettre à jour le state réseau
+			setReseauP(reseauSimule);
 
-    const connex = isConnex();
-    if (!connex) {
-        setResult("erreur: Le réseau n'est pas connex !");
-        return;
-    }
-		*/
+			// Mettre à jour l'UI
+			const { places: newPlaces, arcs: newArcs } = transformationOut(
+				places,
+				transitions,
+				arcs,
+				reseauSimule
+			);
 
-    // Simulation sur chaque transition
-    currentReseau = simulation(currentReseau);
-
-    // Mettre à jour le state avec le réseau simulé
-    setReseauP(currentReseau);
-
-    // Mettre à jour places et arcs si besoin
-    const { places: newPlaces, arcs: newArcs } = transformationOut(
-        places,
-        transitions,
-        arcs,
-        currentReseau
-    );
-
-    setPlaces(newPlaces);
-    setArcs(newArcs);
-};
-
+			setPlaces(newPlaces);
+			setArcs(newArcs);
+		}
+	};
 	/////////////////////////////
 
 	const handleBorne = () => {
 
 		const borne = isBorne();
-		if(!borne){
+		if (!borne) {
 			setResult("Dépassement de borne");
 		}
 		else (setResult("On est bien k-borné"))
@@ -320,19 +345,106 @@ function App() {
 	}
 
 	const handleDeadlock = () => {
-
-		const deadlock = isDeadlock();
-		if(!deadlock){
-			setResult("pas de deadlock");
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs)
+			const deadlock = isDeadlock(reseauLocal);
+			if(!deadlock){
+				setResult("pas de deadlock");
+			}
+			else {
+				setResult("deadlock situation");
+			}
 		}
-		else (setResult("deadlock situation"))
+		return;
+	}
+
+	const handleTarjan = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const sccs = tarjan(reseauLocal);
+			setResult(`Composantes fortement connexes: ${sccs.length} trouvées - ${JSON.stringify(sccs)}`);
+		}
+		return; 
+	}
+
+	const handleInvariantTransitions = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const hasInvariant = isInvariantTransitions(reseauLocal);
+			if(hasInvariant){
+				setResult("T-invariant détecté: le réseau peut revenir au marquage initial");
+			}
+			else {
+				setResult("Aucun T-invariant détecté");
+			}
+		}
+		return;
+	}
+
+	const handleInvariantConservation = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const isConserved = isInvariantConservation(reseauLocal);
+			if(isConserved){
+				setResult("P-invariant respecté: conservation des jetons");
+			}
+			else {
+				setResult("P-invariant non respecté: jetons créés ou détruits");
+			}
+		}
+		return;
+	}
+
+	const handleMarquageValide = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const isValid = marquageValide(reseauLocal);
+			if(isValid){
+				setResult("Marquage valide");
+			}
+			else {
+				setResult("Marquage invalide: valeurs négatives ou non entières");
+			}
+		}
+		return;
+	}
+
+	const handlePuits = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const puitsNodes = puits(reseauLocal);
+			setResult(`Puits trouvés: ${puitsNodes.join(", ") || "aucun"}`);
+		}
+		return;
+	}
+
+	const handleSources = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const sourceNodes = sources(reseauLocal);
+			setResult(`Sources trouvées: ${sourceNodes.join(", ") || "aucune"}`);
+		}
+		return;
+	}
+
+	const handleEstSimple = () => {
+		if (handleVerif()){
+			const reseauLocal = transformationIn(places, transitions, arcs);
+			const simple = estSimple(reseauLocal);
+			if(simple){
+				setResult("Réseau simple: pas d'arcs multiples entre mêmes nœuds");
+			}
+			else {
+				setResult("Réseau non simple: arcs multiples détectés");
+			}
+		}
 		return;
 	}
 
 	/////////////////////////////
 
 	return (
-		<div className='w-screen h-screen App px-16 py-4 space-y-4'>
+		<div className='w-screen h-screen App px-16 py-4 space-y-4 bg-white'>
 			{isDialogBoxOpen && selectedItem && (
 				<ChangeValueDialogBox
 					setDialogBoxIsOpen={setDialogBoxIsOpen}
@@ -352,19 +464,38 @@ function App() {
 			{isTextBoxOpen && (
 				<ChangeTextDialogBox
 					setDialogBoxIsOpen={setIsTextBoxOpen}
-					previousText={""}
+					previousText={selectedAnnotation?.text ?? ""}
 					onSave={(text) => {
-					setAnnotations((prev) =>
-						prev.map((ann) =>
-						ann.id === selectedAnnotation.id ? { ...ann, text } : ann
-						)
-					);
+
+						if (!selectedAnnotation) {
+							if (!selectedAnnotation) {
+								const newAnn = {
+									id: Date.now(),
+									text,
+								};
+								setPendingAnnotation(newAnn);
+								setPlacingAnnotation(true); // active le mode placement
+								setSelectedAnnotation(newAnn); // pour que le texte fantôme soit aussi sélectionné
+							}
+						}
+
+						else {
+							setAnnotations((prev) =>
+								prev.map((ann) =>
+									ann.id === selectedAnnotation.id
+										? { ...ann, text }
+										: ann
+								)
+							);
+						}
+
+						setIsTextBoxOpen(false);
 					}}
 				/>
-				)}
-			<div>
-				<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
-			</div>
+			)}
+
+			{/* Header */}
+			<h1 className='text-xl font-bold'>Pétri Network Maker</h1>
 
 			<EditorToolbar
 				doSimulation={doSimulation}
@@ -383,6 +514,13 @@ function App() {
 				placingPlace={placingPlace}
 				handleBorne={handleBorne}
 				handleDeadlock={handleDeadlock}
+				handleTarjan={handleTarjan}
+				handleInvariantTransitions={handleInvariantTransitions}
+				handleInvariantConservation={handleInvariantConservation}
+				handleMarquageValide={handleMarquageValide}
+				handlePuits={handlePuits}
+				handleSources={handleSources}
+				handleEstSimple={handleEstSimple}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}
@@ -462,6 +600,7 @@ function App() {
 							onClick={() => handleTransitionClick(transition.id)}
 						/>
 					))}
+<<<<<<< HEAD
 					{placingAnnotation && (
 						<text
 							x={mousePos.x}
@@ -473,11 +612,27 @@ function App() {
 							New annotation
 						</text>
 					)}
+=======
+					{placingTransition && (
+						<rect
+							x={mousePos.x - 20}
+							y={mousePos.y - 30}
+							width={20}
+							height={60}
+							fill='rgba(0,0,0,0.2)'
+							stroke='black'
+							strokeWidth='2'
+							pointerEvents='none'
+						/>
+					)}
+					{/* Annotations existantes */}
+>>>>>>> 221a13c40cc6af3c3c4274b828c3e2a564410e5a
 					{annotations.map((ann) => (
 						<text
 							key={ann.id}
 							x={ann.x}
 							y={ann.y}
+<<<<<<< HEAD
 							fill={"black"}
 							fontSize="16"
 							style={{ cursor: "pointer", userSelect: "none" }}
@@ -486,11 +641,63 @@ function App() {
 							e.stopPropagation(); // pour ne pas cliquer sur le canvas
 							setSelectedAnnotation(ann);
 							setIsTextBoxOpen(true);
+=======
+							fontSize={16}
+							style={{ cursor: "pointer", userSelect: "none" }}
+							pointerEvents="all"
+							onMouseDown={(e) => {
+								e.stopPropagation();
+								setSelectedAnnotation(ann);
+
+								const svg = e.currentTarget.ownerSVGElement;
+								const rect = svg.getBoundingClientRect();
+								const offsetX = e.clientX - rect.left - ann.x;
+								const offsetY = e.clientY - rect.top - ann.y;
+
+								const handleDrag = (ev) => {
+									const newX = ev.clientX - rect.left - offsetX;
+									const newY = ev.clientY - rect.top - offsetY;
+									setAnnotations((prev) =>
+										prev.map((a) =>
+											a.id === ann.id ? { ...a, x: newX, y: newY } : a
+										)
+									);
+								};
+
+								const handleDragEnd = () => {
+									window.removeEventListener("mousemove", handleDrag);
+									window.removeEventListener("mouseup", handleDragEnd);
+								};
+
+								window.addEventListener("mousemove", handleDrag);
+								window.addEventListener("mouseup", handleDragEnd);
+							}}
+							onClick={(e) => {
+								e.stopPropagation();
+								setSelectedAnnotation(ann);
+								setIsTextBoxOpen(true);
+>>>>>>> 221a13c40cc6af3c3c4274b828c3e2a564410e5a
 							}}
 						>
 							{ann.text}
 						</text>
 					))}
+<<<<<<< HEAD
+=======
+
+					{/* Texte fantôme lors du placement */}
+					{placingAnnotation && pendingAnnotation && (
+						<text
+							x={mousePos.x}
+							y={mousePos.y}
+							fontSize={16}
+							fill="rgba(0,0,0,0.3)"
+							pointerEvents="none"
+						>
+							{pendingAnnotation.text}
+						</text>
+					)}
+>>>>>>> 221a13c40cc6af3c3c4274b828c3e2a564410e5a
 				</svg>
 
 				{placingPlace || (movingPlaceId && !selectedTransition) ? (
@@ -571,11 +778,10 @@ function App() {
 
 						<div
 							key={place.id}
-							className={`absolute flex items-center justify-center w-8 h-8 rounded-full hover:border-2 hover:border-blue-500 ${
-								selectedElement === place.id
-									? "bg-blue-500"
-									: "bg-gray-500"
-							}`}
+							className={`absolute flex items-center justify-center w-8 h-8 rounded-full hover:border-2 hover:border-blue-500 ${selectedElement === place.id
+								? "bg-blue-500"
+								: "bg-gray-500"
+								}`}
 							style={{ left: place.x, top: place.y }}
 							onClick={() => {
 								if (!creatingArc) {
@@ -783,11 +989,12 @@ function App() {
 					);
 				})}
 			</div>
+
+			{/* Result area */}
 			<Textarea
 				placeholder='Results will be here.'
-				disabled
 				value={result}
-				className='w-full h-24 text-black'
+				className='bg-white w-full h-24 text-black'
 			/>
 		</div>
 	);

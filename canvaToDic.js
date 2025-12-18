@@ -1,4 +1,4 @@
-import { MajValDepart, MajEtatDepart, MajReseau, reseau } from "./varGlobales.js";
+import { isBipartite, marquageValide, isConnex } from "/petriLogic.js";
 
 function transformationIn(places, transitions, arcs) {
   const reseaux = {};
@@ -143,5 +143,4 @@ function transformationOut(places, transitions, arcs, reseauLocal) {
     arcs: updatedArcs,
   };
 }
-
 export {transformationIn, transformationOut, formatReseau};

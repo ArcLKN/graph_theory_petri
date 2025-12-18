@@ -1,3 +1,5 @@
+import { valDepart, etatDepart } from "./varGlobales";
+
 var reseau = { 
     "E1": [10, ["T1", 2]], 
     "T1": [0, ["E2", 1], ["E4", 1]], 
@@ -7,22 +9,14 @@ var reseau = {
     "E3": [0], 
     "E5": [0]
 };
-
-var etatDepart;
-etatDepart = "E1";
-
-var valDepart;
-valDepart = 10;
-
 /*
 isBipartite - Vérifie que le réseau Petri est bien structuré
-Description: Un réseau valide a deux groupes : les états (E) sont toujours connectés à des transitions (T), et inversement.
-Méthode: Utilise une technique de coloration avec BFS (Breadth-First Search). Si on peut colorier tous les nœuds en 2 couleurs 
-où les voisins ont toujours des couleurs différentes, le graphe est bipartite.
-Fonctionnement: Démarre d'un nœud, lui assigne couleur 0, explore ses voisins avec BFS et leur assigne couleur 1.
-Si un voisin a déjà la même couleur que le nœud actuel, il y a conflit et le graphe n'est pas bipartite.
-Retourne: booléen (true si bipartite, false si conflit détecté)
-Relations: Fonction de validation indépendante, utilisée avant la simulation
+Description: Un réseau valide a deux groupes distincts : les états (E) connectés uniquement aux transitions (T), 
+et vice-versa. Cette séparation garantit qu'on alterne toujours entre états et transitions.
+Fonctionnement: Utilise un algorithme de coloration avec BFS. On assigne couleur 0 au premier nœud, puis couleur 1 à ses voisins, 
+puis couleur 0 aux voisins de ces voisins, etc. Si deux nœuds voisins ont la même couleur, c'est qu'il y a un problème de structure.
+Retourne: booléen (true si le graphe est bipartite donc structure valide, false si conflit détecté)
+Relations: Fonction de validation indépendante, appelée avant toute simulation pour vérifier l'intégrité structurelle du réseau
 */
 function isBipartite(graph) {
     const color = {};
@@ -67,22 +61,17 @@ function isBipartite(graph) {
 }
 
 /*
-marquageValide - Vérifie que le marquage du réseau de Pétri est valide
-Description: Parcourt tous les états (places) et transitions du réseau pour vérifier
-             que le nombre de ressources (jetons) associé à chacun est correct.
-             Un marquage est considéré valide si chaque valeur est un entier
-             et si elle est supérieure ou égale à 0.
-Importance: Essentielle pour garantir la cohérence du réseau avant une simulation,
-            car un marquage invalide peut produire des comportements impossibles
-            (ressources négatives ou non entières).
-Méthode: Vérifie pour chaque état et transition que la valeur associée est de type entier
-         (Number.isInteger) et qu’elle est >= 0.
-Retourne: booléen (true si tous les marquages sont valides, false sinon)
-Relations: Fonction de validation, utilisée avant le lancement de la simulation
+marquageValide - Vérifie la cohérence des jetons dans le réseau
+Description: Parcourt tous les nœuds pour s'assurer que chaque nombre de jetons est un entier positif ou nul. 
+Évite les situations impossibles comme des jetons négatifs ou des valeurs décimales.
+Fonctionnement: Parcourt chaque état et transition, vérifie que la valeur est un entier avec Number.isInteger() et qu'elle est >= 0. 
+Vérifie aussi que l'état de départ existe.
+Retourne: booléen (true si tous les marquages sont valides, false dès qu'une valeur invalide est détectée)
+Relations: Fonction de validation appelée avant le lancement de simulations, travaille indépendamment des autres fonctions
 */
-function marquageValide() {
+function marquageValide(graph) {
 
-  if (!currentReseau.hasOwnProperty(etatDepart)) {
+  if (!graph.hasOwnProperty(etatDepart)) {
     return false;
   }
 
@@ -90,25 +79,25 @@ function marquageValide() {
     return false;
   }
 
-  for (const noeud in currentReseau) {
-    const valeur = currentReseau[noeud][0];
+  for (const noeud in graph) {
+    const valeur = graph[noeud][0];
 
     if (!Number.isInteger(valeur) || valeur < 0) {
       return false;
     }
   }
 
-  // Si toutes les vérifications passent
   return true;
 }
 
 /*
-isConnex - Vérifie qu'il n'y a pas de parties du réseau isolées
-Description: Démarre d'un nœud et explore tous les voisins avec BFS. Si on peut atteindre tous les nœuds, le réseau est connexe.
-Importance: Crucial car un réseau avec des parties déconnectées ne peut pas fonctionner correctement.
-Méthode: Utilise BFS pour parcourir le graphe. Maintient un Set de nœuds visités. Compare la taille du Set avec le nombre total de nœuds.
-Retourne: booléen (true si tous les nœuds sont atteignables, false si des nœuds sont isolés)
-Relations: Fonction de validation indépendante, utilisée avant la simulation
+isConnex - Vérifie qu'il n'y a pas de parties isolées dans le réseau
+Description: Utilise BFS pour explorer le graphe depuis un point de départ. Si on peut atteindre tous les nœuds, le réseau est connexe. 
+Crucial car des parties déconnectées rendraient certaines transitions inaccessibles.
+Fonctionnement: Démarre du premier nœud, explore tous ses voisins avec BFS en maintenant un Set des nœuds visités. 
+Compare la taille finale du Set avec le nombre total de nœuds.
+Retourne: booléen (true si tous les nœuds sont atteignables, false si des nœuds restent isolés)
+Relations: Fonction de validation structurelle utilisée avant simulation, indépendante des autres validations
 */
 function isConnex(graph){
     const nodes = Object.keys(graph);
@@ -136,12 +125,12 @@ function isConnex(graph){
 
 
 /*
-marquageInitial - Extrait les jetons de chaque état sous forme simplifiée
-Description: Prend le réseau complet et retourne un objet simplifié contenant uniquement les états avec leur nombre de jetons.
-Exemple: {E1: 10, E2: 0, E3: 0} au lieu de la structure complète du réseau.
-Utilité: Pratique pour l'affichage UI et pour créer des copies du marquage pour les simulations hypothétiques.
-Retourne: objet avec états comme clés et nombre de jetons comme valeurs
-Relations: Utilisée par calculNouveauMarquage, isBorne, et pour l'affichage dans les tests
+marquageInitial - Extrait une vue simplifiée des jetons dans les états
+Description: Transforme la structure complexe du réseau en un objet simple contenant juste les états et leurs jetons. 
+Pratique pour afficher l'état actuel ou créer des copies rapides lors de simulations.
+Fonctionnement: Parcourt tous les nœuds du graphe, filtre uniquement ceux qui commencent par "E" (états), et extrait leur nombre de jetons.
+Retourne: objet de type {E1: 10, E2: 5, E3: 0} associant chaque état à son nombre de jetons
+Relations: Utilisée par calculNouveauMarquage, isBorne, isInvariantTransitions et isInvariantConservation pour manipuler les marquages
 */
 function marquageInitial(graph) {
     const marquage = {};
@@ -154,19 +143,15 @@ function marquageInitial(graph) {
 }
 
 /*
-calculNouveauMarquage - Simule le tir d'une transition de manière hypothétique
-Description: Crée une copie du marquage, retire les jetons nécessaires des états d'entrée, ajoute les jetons aux états de sortie.
-Important: L'original n'est jamais touché. C'est pour tester "et si on tirait cette transition?" sans modifier le réseau réel.
-IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids).
-Fonctionnement:
-1. Crée une copie du marquage avec spread operator {...marquage}
-2. Parcourt tous les états pour trouver ceux qui pointent vers la transition (états d'entrée)
-3. Pour chaque état, accumule les poids de tous les arcs qui pointent vers la transition
-4. Retire la somme totale des jetons de l'état selon les poids cumulés (consommation)
-5. Ajoute les jetons aux états de sortie de la transition (production)
-6. Retourne le nouveau marquage sans toucher l'original
-Retourne: nouveau marquage (objet) avec les jetons mis à jour, l'original reste intact
-Relations: Utilisée par isBorne pour tester plusieurs tirs sans modifier le réseau réel. Différente de echangeRessources qui mute.
+calculNouveauMarquage - Simule un tir de transition de façon hypothétique
+Description: Crée une copie du marquage actuel, simule le tir d'une transition dessus, et retourne le nouveau marquage sans jamais 
+toucher à l'original. Permet de tester "et si on tirait cette transition ?" sans modifier le réseau réel.
+Fonctionnement: Fait une copie du marquage avec {...marquage}, parcourt tous les états pour trouver ceux qui alimentent la transition 
+(accumule les poids si plusieurs arcs), retire les jetons correspondants, puis ajoute les jetons aux états de sortie de la transition.
+Point important: Gère les arcs multiples en cumulant les poids (si E1 a deux arcs vers T1 de poids 2 et 3, retire 5 jetons de E1).
+Retourne: nouveau objet marquage avec les jetons mis à jour, l'original reste intact.
+Relations: Utilisée par isBorne, isInvariantTransitions et isInvariantConservation pour explorer l'espace d'états. Différente de 
+echangeRessources qui modifie directement le réseau.
 */
 function calculNouveauMarquage(transition, marquage, graph) {
     const nouveau = { ...marquage };
@@ -200,26 +185,21 @@ function calculNouveauMarquage(transition, marquage, graph) {
 
 /*
 isFranchissable - Vérifie si une transition peut être tirée
-Description: Parcourt tous les états qui pointent vers cette transition et vérifie qu'ils ont assez de jetons.
-IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids).
-Exemple simple: Si E1→T1 avec poids 2, alors E1 doit avoir au moins 2 jetons pour que T1 soit franchissable.
-Exemple multi-arcs: Si E1 a deux arcs vers T1 (poids 2 et 3), alors E1 doit avoir au moins 5 jetons (2+3).
-Fonctionnement:
-1. Parcourt tous les nœuds du réseau
-2. Pour chaque état (E), regarde tous ses arcs sortants
-3. Accumule les poids de tous les arcs qui pointent vers la transition demandée
-4. Vérifie que l'état a assez de jetons pour la somme totale des poids
-5. Si un seul état manque de jetons, retourne false
-6. Si tous les états d'entrée ont assez de jetons, retourne true
-Retourne: booléen (true si la transition peut être tirée, false sinon)
-Relations: Appelée AVANT echangeRessources dans simulation. Utilisée par isDeadlock et isBorne.
+Description: Parcourt tous les états qui alimentent la transition et vérifie qu'ils ont assez de jetons. 
+Une transition n'est franchissable que si TOUS ses états d'entrée ont suffisamment de ressources.
+Fonctionnement: Pour chaque état du réseau, regarde ses arcs sortants et cumule les poids de ceux qui pointent vers la transition 
+demandée. Si le total cumulé est supérieur aux jetons disponibles dans l'état, retourne false immédiatement.
+Point important: Gère les arcs multiples en additionnant les poids (E1→T1 poids 2 + E1→T1 poids 3 = besoin de 5 jetons dans E1).
+Retourne: booléen (true si tous les états d'entrée ont assez de jetons, false si au moins un état manque de ressources)
+Relations: Toujours appelée AVANT echangeRessources dans simulation pour vérifier qu'un tir est possible. Utilisée aussi par 
+isDeadlock et isBorne.
 */
-function isFranchissable(currentReseau, transitionId) {
-    for (const noeud in currentReseau) {
+function isFranchissable(graph, transitionId) {
+    for (const noeud in graph) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
 
-            const arcs = currentReseau[noeud].slice(1);
+            const arcs = graph[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
@@ -227,7 +207,7 @@ function isFranchissable(currentReseau, transitionId) {
                 }
             }
             
-            if (total_poids > 0 && currentReseau[noeud][0] < total_poids) {
+            if (total_poids > 0 && graph[noeud][0] < total_poids) {
                 return false;
             }
         }
@@ -236,27 +216,22 @@ function isFranchissable(currentReseau, transitionId) {
 }
 
 /*
-echangeRessources - Exécute le tir d'une transition pour de vrai
-Description: Contrairement à calculNouveauMarquage, cette fonction modifie directement l'objet reseau.
-Retire les jetons des états d'entrée, ajoute les jetons aux états de sortie.
-IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids retirés).
-Fonctionnement:
-1. Parcourt tous les états du réseau
-2. Pour chaque état, accumule les poids de tous les arcs qui pointent vers la transition
-3. Retire la somme totale des jetons de l'état (consommation)
-4. Parcourt les arcs sortants de la transition
-5. Ajoute les jetons aux états de sortie selon les poids (production)
-6. Mutation directe: reseau[noeud][0] -= total_poids ou += poids
-Retourne: rien (void) car la mutation de reseau est l'effet voulu
-Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Différente de calculNouveauMarquage (retourne copie).
-Changements: Amélioration pour gérer plusieurs arcs d'un même état vers une transition (cohérence avec isFranchissable)
+echangeRessources - Exécute réellement le tir d'une transition
+Description: Modifie directement le réseau en retirant les jetons des états d'entrée et en ajoutant les jetons aux états de sortie. 
+Contrairement à calculNouveauMarquage qui simule, celle-ci change vraiment le réseau.
+Fonctionnement: Parcourt tous les états pour trouver ceux qui alimentent la transition, cumule les poids de leurs arcs (gère les arcs 
+multiples), retire les jetons correspondants. Ensuite parcourt les sorties de la transition et ajoute les jetons aux états de 
+destination.
+Point important: Mutation directe avec -= et += sur le réseau passé en paramètre, pas de copie créée.
+Retourne: le réseau modifié (même si la modification est faite en place)
+Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Opposée à calculNouveauMarquage qui retourne une copie.
 */
-function echangeRessources(reseau, transitionId) {
-    for (const noeud in reseau) {
+function echangeRessources(graph, transitionId) {
+    for (const noeud in graph) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
             
-            const arcs = reseau[noeud].slice(1);
+            const arcs = graph[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
@@ -265,37 +240,34 @@ function echangeRessources(reseau, transitionId) {
             }
             
             if (total_poids > 0) {
-                reseau[noeud][0] -= total_poids;
+                graph[noeud][0] -= total_poids;
             }
         }
     }
 
-    const sortiesTransition = reseau[transitionId].slice(1);
+    const sortiesTransition = graph[transitionId].slice(1);
     for (const arc of sortiesTransition) {
         const [destination, poids] = arc;
-        reseau[destination][0] += poids;
+        graph[destination][0] += poids;
     }
 
-    return reseau
+    return graph
 }
 
 /*
 isDeadlock - Détecte si le système est bloqué définitivement
-Description: Parcourt toutes les transitions et vérifie si au moins une est franchissable.
-Si aucune transition n'est tirable, le système est en deadlock (arrêt définitif).
-Fonctionnement:
-1. Parcourt tous les nœuds du réseau
-2. Pour chaque transition (T), appelle isFranchissable
-3. Si au moins une transition est franchissable, retourne false (pas de deadlock)
-4. Si toutes les transitions sont infranchissables, retourne true (deadlock détecté)
-Importance: Un deadlock signifie que le système ne peut plus évoluer. C'est un état terminal indésirable dans beaucoup de systèmes.
-Retourne: booléen (true si deadlock détecté, false si au moins une transition est franchissable)
-Relations: Appelée après des simulations pour détecter l'arrêt du système. Utilise isFranchissable.
+Description: Vérifie si au moins une transition reste franchissable. Si toutes les transitions sont bloquées, le système ne peut plus 
+évoluer donc c'est un deadlock, un état terminal généralement indésirable.
+Fonctionnement: Parcourt toutes les transitions du réseau et appelle isFranchissable sur chacune. Dès qu'une transition est 
+franchissable, retourne false (pas de deadlock). Si la boucle complète sans trouver de transition franchissable, retourne true 
+(deadlock détecté).
+Retourne: booléen (true si toutes transitions bloquées donc deadlock, false si au moins une transition reste tirable)
+Relations: Appelée après simulations ou lors de l'analyse du réseau. Dépend de isFranchissable pour tester chaque transition.
 */
-function isDeadlock(reseau) {
-    for (const noeud in reseau) {
+function isDeadlock(graph) {
+    for (const noeud in graph) {
         if (noeud.startsWith("T")) {
-            if (isFranchissable(currentReseau, noeud)) {
+            if (isFranchissable(graph, noeud)) {
                 return false;
             }
         }
@@ -304,23 +276,15 @@ function isDeadlock(reseau) {
 }
 
 /*
-isBorne - Vérifie qu'aucun état ne peut accumuler trop de jetons
-Description: Simule plusieurs tirs de transitions pour explorer l'espace d'états et détecter si un état dépasse borneMax.
-Importance: Une simple vérification de l'état actuel ne suffit pas. Le réseau pourrait avoir E1=5 au départ mais après 10 tirs, E1=50.
-Fonctionnement:
-1. Démarre avec le marquage initial
-2. Utilise une queue FIFO (BFS complète) pour explorer TOUS les marquages possibles
-3. Pour chaque marquage de la queue (jusqu'à maxIterations=1000):
-   a. Vérifie si un état > borneMax → retourne false immédiatement
-   b. Trouve toutes les transitions franchissables
-   c. Pour chaque transition franchissable, simule son tir avec calculNouveauMarquage
-   d. Ajoute les nouveaux marquages uniques à la queue (évite boucles infinies avec Set)
-4. Si aucun dépassement trouvé après exploration complète → retourne true
-Méthode: Utilise BFS avec queue FIFO pour explorer tout l'espace d'états. Set de marquages visités pour éviter de revisiter les mêmes états.
-Particularités gérées: Cycles accumulateurs, branches parallèles, réseaux complexes.
-Paramètres: graph (réseau), borneMax (limite de jetons par état), maxIterations (limite d'exploration, défaut=5000)
-Retourne: booléen (false si un état dépasse borneMax, true si tous respectent la borne)
-Relations: Utilise calculNouveauMarquage pour simulations hypothétiques sans modifier le réseau réel.
+isBorne - Vérifie qu'aucun état ne peut accumuler infiniment de jetons
+Description: Explore tous les marquages atteignables pour détecter si un état peut dépasser la borne maximale autorisée. 
+Une vérification instantanée ne suffit pas car un état pourrait avoir 5 jetons maintenant mais monter à 100 après une séquence de tirs.
+Fonctionnement: Utilise BFS avec queue pour explorer l'espace d'états complet. Pour chaque marquage exploré, vérifie qu'aucun 
+état ne dépasse borneMax. Pour chaque transition franchissable, calcule le nouveau marquage avec calculNouveauMarquage et l'ajoute 
+à la queue si pas déjà visité. Un Set évite de revisiter les mêmes marquages (terminaison garantie).
+Point important: Explore tout l'espace d'états accessible, pas juste le marquage actuel. Peut prendre du temps sur de gros réseaux.
+Retourne: booléen (false si un état peut dépasser borneMax, true si le réseau respecte toujours la borne)
+Relations: Utilise marquageInitial pour démarrer et calculNouveauMarquage pour simuler les tirs. Fonctionne de façon indépendante.
 */
 function isBorne(graph, borneMax) {
     const marquageInitial_debut = marquageInitial(graph);
@@ -373,21 +337,15 @@ function isBorne(graph, borneMax) {
 }
 
 /*
-isInvariantTransitions - Vérifie qu'il existe une séquence de transitions qui ramène au marquage initial
-Description: Explore l'espace d'états pour trouver un cycle qui revient au marquage de départ.
-Un invariant de transitions signifie qu'on peut tirer des transitions et revenir exactement à l'état initial.
-Exemple: Si on tire T1, puis T2, puis T3 et qu'on retrouve le marquage initial → invariant existe.
-Fonctionnement:
-1. Sauvegarde le marquage initial comme référence
-2. Utilise BFS pour explorer l'espace d'états en tirant toutes les transitions possibles
-3. Pour chaque nouveau marquage atteint, vérifie s'il correspond au marquage initial
-4. Garde trace de la profondeur (nombre de tirs) pour éviter le marquage initial trivial (0 tirs)
-5. Si on retrouve le marquage initial après au moins 1 tir → retourne true (invariant existe)
-6. Si exploration complète sans trouver de cycle → retourne false
-Méthode: BFS avec queue de paires (marquage, profondeur). Limite à maxDepth tirs pour éviter explosion combinatoire.
-Paramètres: graph (réseau), maxDepth (profondeur max d'exploration, défaut=20)
-Retourne: booléen (true si invariant trouvé, false sinon)
-Relations: Fonction d'analyse avancée. Utilise calculNouveauMarquage pour simulations hypothétiques.
+isInvariantTransitions - Cherche un cycle qui ramène au marquage initial (T-invariant)
+Description: Explore l'espace d'états pour trouver une séquence de transitions qui revient exactement au point de départ. 
+Un T-invariant signifie qu'on peut tirer des transitions et retrouver le marquage initial - c'est un cycle complet du système.
+Fonctionnement: Sauvegarde le marquage initial comme référence, puis explore avec BFS en tirant toutes les transitions possibles. 
+Pour chaque nouveau marquage atteint, compare avec le marquage initial. Important : ignore la première itération (zéro tir) car 
+c'est trivial. Si on retrouve le marquage initial après au moins un tir, retourne true immédiatement.
+Point important: Utilise un Set pour éviter de revisiter les mêmes marquages. Exploration complète de l'espace d'états.
+Retourne: booléen (true si un cycle existe ramenant au marquage initial, false si aucun cycle trouvé)
+Relations: Fonction d'analyse avancée, utilise marquageInitial et calculNouveauMarquage pour les simulations hypothétiques
 */
 function isInvariantTransitions(graph) {
     const marquageInitial_ref = marquageInitial(graph);
@@ -447,22 +405,15 @@ function isInvariantTransitions(graph) {
 }
 
 /*
-isInvariantConservation - Vérifie que le nombre total de jetons reste constant
-Description: Un invariant de conservation (P-invariant) signifie qu'aucune transition ne crée ni ne détruit de jetons.
-Les jetons circulent uniquement, le total reste toujours identique au total initial.
-Exemple conservatif: E1(5) --1--> T1 --1--> E2(0). Total avant = 5, total après = 5 ✓
-Exemple non-conservatif: E1(5) --2--> T1 --1--> E2(0). T1 consomme 2, produit 1 → perte nette ✗
-Fonctionnement:
-1. Calcule le nombre total de jetons au marquage initial
-2. Utilise BFS pour explorer l'espace d'états en tirant toutes les transitions possibles
-3. Pour chaque nouveau marquage atteint, calcule le total de jetons
-4. Si un marquage a un total différent du total initial → retourne false immédiatement
-5. Si tous les marquages explorés ont le même total → retourne true
-Méthode: BFS avec vérification du total à chaque étape. Limite à maxStates marquages pour performances.
-Conditions de conservation: Pour chaque transition T, somme(poids_entrées) = somme(poids_sorties)
-Paramètres: graph (réseau), maxStates (nombre max de marquages à explorer, défaut=1000)
-Retourne: booléen (true si conservation respectée, false si création/destruction détectée)
-Relations: Fonction d'analyse de propriété structurelle. Utilise calculNouveauMarquage pour simulations.
+isInvariantConservation - Vérifie que le nombre total de jetons reste constant (P-invariant)
+Description: Teste si les transitions créent ou détruisent des jetons. Un P-invariant signifie que les jetons ne font que circuler, 
+le total reste identique au marquage initial.
+Fonctionnement: Calcule le total de jetons au départ, puis explore tous les marquages atteignables avec BFS. Pour chaque marquage 
+exploré, recalcule le total de jetons. Si un seul marquage a un total différent de l'initial, retourne false immédiatement 
+(non-conservatif détecté).
+Point important: Une seule violation suffit pour échouer. Tous les marquages doivent avoir exactement le même total.
+Retourne: booléen (true si conservation respectée partout, false si création/destruction de jetons détectée)
+Relations: Fonction d'analyse structurelle, utilise marquageInitial et calculNouveauMarquage pour explorer l'espace d'états
 */
 function isInvariantConservation(graph) {
     const marquageInitial_ref = marquageInitial(graph);
@@ -525,28 +476,16 @@ function isInvariantConservation(graph) {
 }
 
 /*
-tarjan - Algorithme de Tarjan pour trouver les composantes fortement connexes
-Description: Identifie tous les sous-graphes fortement connexes (SCCs) en utilisant DFS avec indices.
-Un sous-graphe fortement connexe est un ensemble maximal de nœuds où chaque nœud peut atteindre tous les autres.
-Structure: Fonction principale avec fonction auxiliaire strongconnect interne (closure).
-Algorithme en temps linéaire O(V+E) optimal pour identifier les SCCs.
-Fonctionnement:
-1. Initialise index = 0, stack vide, nodeData pour stocker index/lowlink/onStack
-2. Pour chaque nœud v non visité du graphe :
-   - Appelle strongconnect(v) qui explore récursivement
-3. strongconnect(v) :
-   - Assigne index et lowlink au nœud
-   - Empile le nœud (onStack = true)
-   - Explore chaque successeur w :
-     * Si w non visité : recurse, puis v.lowlink = min(v.lowlink, w.lowlink)
-     * Si w dans pile : v.lowlink = min(v.lowlink, w.index) [arc de retour]
-   - Si v.lowlink == v.index : v est racine d'une SCC
-     * Dépile tous les nœuds jusqu'à v → forme une SCC complète
-4. Retourne tableau de SCCs (chaque SCC = tableau de nœuds)
-Méthode: DFS avec pile et lowlink pour détecter les racines de SCCs.
-Paramètres: graph (réseau de Petri)
-Retourne: tableau de tableaux (chaque sous-tableau = une SCC avec ses nœuds)
-Relations: Fonction d'analyse structurelle avancée. Détecte les cycles et la modularité du réseau.
+tarjan - Trouve les composantes fortement connexes (SCCs) du réseau
+Description: Identifie tous les sous-graphes où chaque nœud peut atteindre tous les autres nœuds du même sous-graphe. 
+Une SCC représente un groupe de nœuds fortement inter-connectés. Algorithme optimal en temps linéaire O(V+E).
+Fonctionnement: Utilise DFS avec indices et lowlinks. Pour chaque nœud, assigne un index (ordre de visite) et un lowlink (
+plus petit index atteignable par arcs descendants ou de retour). Empile les nœuds pendant le parcours. Quand un nœud a lowlink = index, 
+c'est la racine d'une SCC et on dépile tous les nœuds jusqu'à lui pour former la composante.
+Point important: La fonction interne strongconnect fait le travail récursif, la fonction principale initialise et collecte les 
+résultats.
+Retourne: tableau de SCCs, où chaque SCC est un tableau de nœuds appartenant à cette composante
+Relations: Fonction d'analyse structurelle avancée indépendante. Révèle la modularité et les cycles du réseau.
 */
 function tarjan(graph) {
     const nodes = Object.keys(graph);
@@ -603,35 +542,45 @@ function tarjan(graph) {
 }
 
 /*
-lignes de test pour les fonctions => les enlever avant de push ou les rajouter si faire test
-+ décommenter la ligne export
+puits - Trouve les nœuds terminaux sans sorties
+Description: Identifie tous les nœuds qui n'ont aucune connexion sortante. Ce sont les destinations finales où les jetons s'accumulent 
+sans pouvoir aller ailleurs. Dans la structure du réseau, un puits a une longueur de 1 (juste sa valeur, pas d'arcs).
+Fonctionnement: Parcourt tous les nœuds et vérifie que leur tableau de connexions a une longueur de 1 (index 0 = valeur, pas d'index 
+suivants pour les arcs).
+Retourne: tableau contenant les identifiants des nœuds puits
+Relations: Fonction d'analyse structurelle basique, indépendante des autres fonctions
 */
-
-function puits(){
+function puits(graph){
     let puit = [];
-    // on trouve les noeuds qui n'ont pas de connexions
-    for (let node in currentReseau){
-        if (currentReseau[node].length === 1){
+    for (let node in graph){
+        if (graph[node].length === 1){
             puit.push(node);
         }
     }
     return puit;
 }
 
-function sources(){
+/*
+sources - Trouve les nœuds initiaux sans entrées
+Description: Identifie tous les nœuds qui ne reçoivent aucun arc entrant. Ce sont les points de départ du réseau où les jetons 
+commencent leur parcours, personne ne leur en envoie.
+Fonctionnement: Crée d'abord un tableau de tous les nœuds qui sont destinations d'au moins un arc. Ensuite compare avec tous les 
+nœuds du réseau - ceux qui n'apparaissent jamais comme destination sont les sources.
+Retourne: tableau contenant les identifiants des nœuds sources
+Relations: Fonction d'analyse structurelle basique, indépendante des autres fonctions
+*/
+function sources(graph){
     let compare = [];
     let source = [];
 
-    // compare <-- tous les noeuds connectés
-    for (let node in currentReseau){
-        for (let i = 1; i < currentReseau[node].length; i++){
-            if (!compare.includes(currentReseau[node][i][0])){
-                compare.push(currentReseau[node][i][0]);
+    for (let node in graph){
+        for (let i = 1; i < graph[node].length; i++){
+            if (!compare.includes(graph[node][i][0])){
+                compare.push(graph[node][i][0]);
             }
         }
     }
-    // source <-- noeuds not in compare
-    for (let node in currentReseau){
+    for (let node in graph){
         if (!compare.includes(node)){
             source.push(node);
         }
@@ -640,16 +589,22 @@ function sources(){
     return source;
 }
 
-//vérifie si le réseau est simple 
-function estSimple() {
-    // Pour chaque noeuds on vérifie si il n'y a pas deux liens vers le même noeud
-    for (let node in currentReseau) {
+/*
+estSimple - Vérifie l'absence d'arcs multiples entre mêmes nœuds
+Description: Parcourt tous les nœuds pour s'assurer qu'il n'existe pas deux arcs différents allant vers la même destination. 
+Un réseau simple a au maximum un arc entre deux nœuds donnés.
+Fonctionnement: Pour chaque nœud, collecte ses destinations dans un tableau temporaire. Si une destination apparaît deux fois, 
+retourne false immédiatement (arc multiple détecté).
+Retourne: booléen (true si le réseau est simple sans arcs multiples, false dès qu'un arc multiple est trouvé)
+Relations: Fonction d'analyse structurelle qui caractérise le type de réseau, indépendante des autres fonctions
+*/
+function estSimple(graph) {
+    for (let node in graph) {
         let liens = [];
 
-        for (let i = 1; i < currentReseau[node].length; i++) {
-            let cible = currentReseau[node][i][0];
+        for (let i = 1; i < graph[node].length; i++) {
+            let cible = graph[node][i][0];
 
-            // vérifier si la cible existe déjà dans le tableau destinations
             for (let j = 0; j < liens.length; j++) {
                 if (liens[j] === cible) {
                     return false;
@@ -661,7 +616,16 @@ function estSimple() {
     return true;
 }
 
-function DFS(départ) {
+/*
+DFS - Parcours en profondeur du réseau depuis un point de départ
+Description: Explore le graphe en profondeur à partir d'un nœud donné en suivant les arcs. Collecte tous les états (E) rencontrés 
+pendant l'exploration.
+Fonctionnement: Utilise une pile pour le parcours. Empile le nœud de départ, puis tant que la pile n'est pas vide : dépile un nœud, 
+le marque comme visité, collecte-le s'il commence par "E", et empile tous ses voisins non visités.
+Retourne: tableau des états (nœuds commençant par "E") trouvés pendant l'exploration
+Relations: Fonction utilitaire de parcours, utilisée pour explorer le réseau. Travaille avec currentReseau (variable globale).
+*/
+function DFS(graph, départ) {
     var visités = [];
     var étatsTrouvés = [];
     var pile = [départ];
@@ -675,7 +639,7 @@ function DFS(départ) {
                 étatsTrouvés.push(noeud);
             }
 
-             var arcs = currentReseau[noeud];
+             var arcs = graph[noeud];
             for (var j = 1; j < arcs.length; j++) {
                 var voisin = arcs[j][0];
                 pile.push(voisin);
@@ -686,6 +650,15 @@ function DFS(départ) {
     return étatsTrouvés;
 }
 
+/*
+reachable - Vérifie l'atteignabilité entre deux nœuds
+Description: Teste si on peut aller du nœud "from" au nœud "to" en suivant les arcs du graphe. Utile pour vérifier la connectivité 
+entre deux points spécifiques.
+Fonctionnement: Utilise BFS avec queue. Démarre de "from", explore les voisins niveau par niveau en maintenant un Set des nœuds 
+visités. Si on atteint "to" pendant l'exploration, retourne true. Si l'exploration se termine sans trouver "to", retourne false.
+Retourne: booléen (true si "to" est atteignable depuis "from", false sinon)
+Relations: Fonction utilitaire utilisée notamment par isLive pour tester l'atteignabilité entre marquages
+*/
 function reachable(from, to, graph) {
   const visited = new Set();
   const queue = [from];
@@ -702,25 +675,37 @@ function reachable(from, to, graph) {
   return false;
 }
 
+/*
+isLive - Vérifie que toutes les transitions restent toujours activables (vivacité)
+Description: Un réseau est vivant si pour chaque transition et chaque marquage atteignable, il existe toujours un futur où cette 
+transition peut être tirée. Aucune transition ne peut devenir définitivement morte.
+Fonctionnement: Construit d'abord le graphe d'atteignabilité complet avec buildReachabilityGraph. Pour chaque marquage atteignable et 
+chaque transition, cherche s'il existe au moins un marquage futur (atteignable depuis le marquage actuel) où la transition devient 
+franchissable. Si une transition n'a aucun futur possible dans un marquage donné, le réseau n'est pas vivant.
+Point important: Fonction très coûteuse car explore tout l'espace d'atteignabilité. Requiert buildReachabilityGraph et isEnabled 
+(fonctions externes non définies dans ce fichier).
+Retourne: booléen (true si le réseau est vivant, false si au moins une transition peut mourir)
+Relations: Fonction d'analyse comportementale avancée, dépend de buildReachabilityGraph, isEnabled et reachable
+*/
 function isLive() {
-  // 1. Construire le graphe d’atteignabilité
+
   const graph = buildReachabilityGraph(currentReseau);
   const markings = Object.keys(graph);
 
-  // 2. Pour chaque marquage atteignable
+
   for (const M of markings) {
 
-    // Reconstruire un réseau avec ce marquage
+
     for (const transition in currentReseau) {
       if (!transition.startsWith("T")) continue;
 
       let transitionVivante = false;
 
-      // 3. Chercher un futur où la transition est franchissable
+
       for (const M2 of markings) {
         if (reachable(M, M2, graph)) {
 
-          // Recréer le réseau correspondant à M2
+
           const reseauM2 = JSON.parse(JSON.stringify(currentReseau));
           const tokens = M2.split(",").map(Number);
 
@@ -738,32 +723,32 @@ function isLive() {
         }
       }
 
-      // 4. Transition morte → réseau non vivant
+
       if (!transitionVivante) {
         return false;
       }
     }
   }
 
-  // 5. Toutes les transitions sont vivantes
+  
   return true;
 }
 
 /*
-simulation - Fonction principale appelée par l'UI
-Description: Vérifie d'abord avec isFranchissable si la transition peut être tirée. Si oui, appelle echangeRessources pour exécuter le tir.
-Si non, ne fait rien. C'est le point d'entrée pour le joueur qui clique sur une transition.
-Fonctionnement:
-1. Appelle isFranchissable(reseau, transitionId) pour vérifier si tirable
-2. Si true, appelle echangeRessources(reseau, transitionId) pour modifier le réseau
-3. Si false, ne fait rien (la transition ne peut pas être tirée)
-Usage: L'UI React appellera cette fonction quand l'utilisateur clique sur une transition dans le canvas.
-Retourne: rien (void), mais modifie reseau si la transition est franchissable
-Relations: Point d'entrée principal. Utilise isFranchissable et echangeRessources.
+simulation - Fonction principale de simulation appelée par l'interface utilisateur
+Description: Parcourt toutes les transitions du réseau et tire celles qui sont franchissables. C'est le point d'entrée principal quand 
+l'utilisateur lance une simulation depuis l'UI.
+Fonctionnement: Crée deux clones du réseau avec structuredClone. Le premier clone sert à identifier quelles transitions sont 
+franchissables à l'instant T. Le second clone est modifié en tirant ces transitions avec echangeRessources. Pour chaque transition, 
+vérifie d'abord si elle est franchissable sur les deux clones avant de l'exécuter.
+Point important: Les deux clones sont nécessaires pour éviter qu'une transition tirée ne rende une autre transition franchissable 
+artificiellement dans la même itération.
+Retourne: le réseau modifié après avoir tiré toutes les transitions franchissables simultanément
+Relations: Fonction principale utilisée par l'UI React. Appelle isFranchissable pour vérifier et echangeRessources pour exécuter.
 */
-function simulation(reseauLocal) {
-    let copy = structuredClone(reseauLocal);
-    let res = structuredClone(reseauLocal);
+function simulation(graph) {
+    let copy = structuredClone(graph);
+    let res = structuredClone(graph);
 
     for (let elem in copy){
         if (elem.startsWith("T")){
@@ -775,5 +760,5 @@ function simulation(reseauLocal) {
     return res;
 }
 
-export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan, DFS, estSimple, isLive, marquageValide, puits, sources,  };
+export {isBipartite, isConnex, marquageInitial, calculNouveauMarquage, isFranchissable, echangeRessources, isDeadlock, isBorne, simulation, isInvariantTransitions, isInvariantConservation, tarjan, DFS, estSimple, isLive, marquageValide, puits, sources, reseau };
 
