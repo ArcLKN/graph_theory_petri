@@ -60,8 +60,7 @@ export default function EditorToolbar({
 					>
 						Add Arc
 					</Button>
-					<AnnotationMenu addAnnotation={addAnnotation}  />
-					
+					<AnnotationMenu addAnnotation={addAnnotation} />
 
 					<ButtonGroupSeparator />
 
@@ -76,11 +75,13 @@ export default function EditorToolbar({
 					<SimulationMenu
 						setResult={setResult}
 						handleTransformationIn={handleTransformationIn}
-						handleDeadlock = {handleDeadlock}
+						handleDeadlock={handleDeadlock}
 						handleBorne={handleBorne}
 						handleTarjan={handleTarjan}
 						handleInvariantTransitions={handleInvariantTransitions}
-						handleInvariantConservation={handleInvariantConservation}
+						handleInvariantConservation={
+							handleInvariantConservation
+						}
 						handleMarquageValide={handleMarquageValide}
 						handlePuits={handlePuits}
 						handleSources={handleSources}
@@ -90,13 +91,8 @@ export default function EditorToolbar({
 					<ButtonGroupSeparator />
 
 					{/* Delete Buttons */}
+					{/*<ButtonclassName='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground'onClick={null}>Delete Element</Button>*/}
 
-					<Button
-						className='bg-red-300 text-foreground hover:bg-red-400  hover:text-accent-foreground'
-						onClick={null}
-					>
-						Delete Element
-					</Button>
 					<Button
 						className='bg-red-400 text-foreground hover:bg-red-500 hover:text-accent-foreground'
 						onClick={handleDeleteArcs}
