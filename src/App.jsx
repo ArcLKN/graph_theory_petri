@@ -986,6 +986,7 @@ function App() {
 				placeholder='Results will be here.'
 				value={result}
 				className='bg-white w-full h-24 text-black'
+				readOnly
 			/>
 		</div>
 	);
