@@ -602,31 +602,28 @@ lignes de test pour les fonctions => les enlever avant de push ou les rajouter s
 + décommenter la ligne export
 */
 
-function puits(){
+function puits(graph){
     let puit = [];
-    // on trouve les noeuds qui n'ont pas de connexions
-    for (let node in currentReseau){
-        if (currentReseau[node].length === 1){
+    for (let node in graph){
+        if (graph[node].length === 1){
             puit.push(node);
         }
     }
     return puit;
 }
 
-function sources(){
+function sources(graph){
     let compare = [];
     let source = [];
 
-    // compare <-- tous les noeuds connectés
-    for (let node in currentReseau){
-        for (let i = 1; i < currentReseau[node].length; i++){
-            if (!compare.includes(currentReseau[node][i][0])){
-                compare.push(currentReseau[node][i][0]);
+    for (let node in graph){
+        for (let i = 1; i < graph[node].length; i++){
+            if (!compare.includes(graph[node][i][0])){
+                compare.push(graph[node][i][0]);
             }
         }
     }
-    // source <-- noeuds not in compare
-    for (let node in currentReseau){
+    for (let node in graph){
         if (!compare.includes(node)){
             source.push(node);
         }
@@ -636,15 +633,13 @@ function sources(){
 }
 
 //vérifie si le réseau est simple 
-function estSimple() {
-    // Pour chaque noeuds on vérifie si il n'y a pas deux liens vers le même noeud
-    for (let node in currentReseau) {
+function estSimple(graph) {
+    for (let node in graph) {
         let liens = [];
 
-        for (let i = 1; i < currentReseau[node].length; i++) {
-            let cible = currentReseau[node][i][0];
+        for (let i = 1; i < graph[node].length; i++) {
+            let cible = graph[node][i][0];
 
-            // vérifier si la cible existe déjà dans le tableau destinations
             for (let j = 0; j < liens.length; j++) {
                 if (liens[j] === cible) {
                     return false;
