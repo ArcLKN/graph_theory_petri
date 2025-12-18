@@ -34,18 +34,6 @@ import EditorToolbar from "./components/EditorToolbar.jsx";
 import ArrowMarker from "./components/ArrowMarker.jsx";
 import { ChangeTextDialogBox } from "./components/changeText.jsx";
 
-function addPlace(setPlaces) {
-	// Logic to add a place to the Pétri Network
-	setPlaces((prevPlaces) => [
-		...prevPlaces,
-		{
-			id: Date.now(),
-			x: Math.random() * 400 + 50,
-			y: Math.random() * 300 + 50,
-		},
-	]);
-}
-
 function addTransition(setTransitions, mousePos) {
 	// Logic to add a transition to the Pétri Network
 	setTransitions((prevTransitions) => [
@@ -60,23 +48,10 @@ function addTransition(setTransitions, mousePos) {
 	]);
 }
 
-function addAnnotation(setAnnotations, mousePos) {
-	setAnnotations((prevAnnotations) => [
-		...prevAnnotations,
-		{
-			id: Date.now(),
-			x: mousePos.x,
-			y: mousePos.y,
-			text: "New annotation",
-		},
-	]);
-}
-
 function App() {
 	const [isOriented, setIsOriented] = useState(true);
 
 	const [isDialogBoxOpen, setDialogBoxIsOpen] = useState(false);
-	const [inputValue, setInputValue] = useState(1);
 	const [doSimulation, setDoSimulation] = useState(false);
 	const [simulationSpeed, setSimulationSpeed] = useState(50);
 
@@ -99,7 +74,6 @@ function App() {
 	const [creatingArc, setCreatingArc] = useState(false);
 	const [arcStartId, setArcStartId] = useState(null);
 	const [arcStartType, setArcStartType] = useState(null);
-	const [editingArcEnd, setEditingArcEnd] = useState(null);
 
 	const [placingTransition, setPlacingTransition] = useState(false);
 	const [transitions, setTransitions] = useState([]);
