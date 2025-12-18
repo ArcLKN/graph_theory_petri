@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChangeValueDialogBox } from "./components/changeValue";
 import { Button } from "./components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -312,7 +312,16 @@ function App() {
 
 	// Fonction pour lancer la simulation après transformation et vérification
 	const handleSimulation = () => {
-		if (handleVerif()) {
+		setDoSimulation((prev) => !prev);
+	};
+
+	useEffect(() => {
+		if (!doSimulation) {
+			return;
+		}
+
+		const interval = setInterval(() => {
+			if (!handleVerif) return;
 			//Construire le réseau à partir du canvas
 			const reseauLocal = transformationIn(places, transitions, arcs);
 
@@ -332,8 +341,11 @@ function App() {
 
 			setPlaces(newPlaces);
 			setArcs(newArcs);
-		}
-	};
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [doSimulation, places, transitions, arcs]);
+
 	/////////////////////////////
 
 	const handleBorne = () => {
