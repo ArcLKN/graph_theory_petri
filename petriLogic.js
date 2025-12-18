@@ -87,17 +87,17 @@ function marquageValide(reseau) {
     }
   }
 
-  // Si toutes les vérifications passent
   return true;
 }
 
 /*
-isConnex - Vérifie qu'il n'y a pas de parties du réseau isolées
-Description: Démarre d'un nœud et explore tous les voisins avec BFS. Si on peut atteindre tous les nœuds, le réseau est connexe.
-Importance: Crucial car un réseau avec des parties déconnectées ne peut pas fonctionner correctement.
-Méthode: Utilise BFS pour parcourir le graphe. Maintient un Set de nœuds visités. Compare la taille du Set avec le nombre total de nœuds.
-Retourne: booléen (true si tous les nœuds sont atteignables, false si des nœuds sont isolés)
-Relations: Fonction de validation indépendante, utilisée avant la simulation
+isConnex - Vérifie qu'il n'y a pas de parties isolées dans le réseau
+Description: Utilise BFS pour explorer le graphe depuis un point de départ. Si on peut atteindre tous les nœuds, le réseau est connexe. 
+Crucial car des parties déconnectées rendraient certaines transitions inaccessibles.
+Fonctionnement: Démarre du premier nœud, explore tous ses voisins avec BFS en maintenant un Set des nœuds visités. 
+Compare la taille finale du Set avec le nombre total de nœuds.
+Retourne: booléen (true si tous les nœuds sont atteignables, false si des nœuds restent isolés)
+Relations: Fonction de validation structurelle utilisée avant simulation, indépendante des autres validations
 */
 function isConnex(graph){
     const nodes = Object.keys(graph);
@@ -125,12 +125,12 @@ function isConnex(graph){
 
 
 /*
-marquageInitial - Extrait les jetons de chaque état sous forme simplifiée
-Description: Prend le réseau complet et retourne un objet simplifié contenant uniquement les états avec leur nombre de jetons.
-Exemple: {E1: 10, E2: 0, E3: 0} au lieu de la structure complète du réseau.
-Utilité: Pratique pour l'affichage UI et pour créer des copies du marquage pour les simulations hypothétiques.
-Retourne: objet avec états comme clés et nombre de jetons comme valeurs
-Relations: Utilisée par calculNouveauMarquage, isBorne, et pour l'affichage dans les tests
+marquageInitial - Extrait une vue simplifiée des jetons dans les états
+Description: Transforme la structure complexe du réseau en un objet simple contenant juste les états et leurs jetons. 
+Pratique pour afficher l'état actuel ou créer des copies rapides lors de simulations.
+Fonctionnement: Parcourt tous les nœuds du graphe, filtre uniquement ceux qui commencent par "E" (états), et extrait leur nombre de jetons.
+Retourne: objet de type {E1: 10, E2: 5, E3: 0} associant chaque état à son nombre de jetons
+Relations: Utilisée par calculNouveauMarquage, isBorne, isInvariantTransitions et isInvariantConservation pour manipuler les marquages
 */
 function marquageInitial(graph) {
     const marquage = {};
@@ -590,11 +590,6 @@ function tarjan(graph) {
     
     return sccs;
 }
-
-/*
-lignes de test pour les fonctions => les enlever avant de push ou les rajouter si faire test
-+ décommenter la ligne export
-*/
 
 function puits(graph){
     let puit = [];
