@@ -69,9 +69,9 @@ Vérifie aussi que l'état de départ existe.
 Retourne: booléen (true si tous les marquages sont valides, false dès qu'une valeur invalide est détectée)
 Relations: Fonction de validation appelée avant le lancement de simulations, travaille indépendamment des autres fonctions
 */
-function marquageValide(reseau) {
+function marquageValide(graph) {
 
-  if (!reseau.hasOwnProperty(etatDepart)) {
+  if (!graph.hasOwnProperty(etatDepart)) {
     return false;
   }
 
@@ -79,8 +79,8 @@ function marquageValide(reseau) {
     return false;
   }
 
-  for (const noeud in reseau) {
-    const valeur = reseau[noeud][0];
+  for (const noeud in graph) {
+    const valeur = graph[noeud][0];
 
     if (!Number.isInteger(valeur) || valeur < 0) {
       return false;
@@ -194,12 +194,12 @@ Retourne: booléen (true si tous les états d'entrée ont assez de jetons, false
 Relations: Toujours appelée AVANT echangeRessources dans simulation pour vérifier qu'un tir est possible. Utilisée aussi par 
 isDeadlock et isBorne.
 */
-function isFranchissable(currentReseau, transitionId) {
-    for (const noeud in currentReseau) {
+function isFranchissable(graph, transitionId) {
+    for (const noeud in graph) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
 
-            const arcs = currentReseau[noeud].slice(1);
+            const arcs = graph[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
@@ -207,7 +207,7 @@ function isFranchissable(currentReseau, transitionId) {
                 }
             }
             
-            if (total_poids > 0 && currentReseau[noeud][0] < total_poids) {
+            if (total_poids > 0 && graph[noeud][0] < total_poids) {
                 return false;
             }
         }
@@ -226,12 +226,12 @@ Point important: Mutation directe avec -= et += sur le réseau passé en paramè
 Retourne: le réseau modifié (même si la modification est faite en place)
 Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Opposée à calculNouveauMarquage qui retourne une copie.
 */
-function echangeRessources(reseau, transitionId) {
-    for (const noeud in reseau) {
+function echangeRessources(graph, transitionId) {
+    for (const noeud in graph) {
         if (noeud.startsWith("E")) {
             let total_poids = 0;
             
-            const arcs = reseau[noeud].slice(1);
+            const arcs = graph[noeud].slice(1);
             for (const arc of arcs) {
                 const [destination, poids] = arc;
                 if (destination === transitionId) {
@@ -240,18 +240,18 @@ function echangeRessources(reseau, transitionId) {
             }
             
             if (total_poids > 0) {
-                reseau[noeud][0] -= total_poids;
+                graph[noeud][0] -= total_poids;
             }
         }
     }
 
-    const sortiesTransition = reseau[transitionId].slice(1);
+    const sortiesTransition = graph[transitionId].slice(1);
     for (const arc of sortiesTransition) {
         const [destination, poids] = arc;
-        reseau[destination][0] += poids;
+        graph[destination][0] += poids;
     }
 
-    return reseau
+    return graph
 }
 
 /*
@@ -264,10 +264,10 @@ franchissable, retourne false (pas de deadlock). Si la boucle complète sans tro
 Retourne: booléen (true si toutes transitions bloquées donc deadlock, false si au moins une transition reste tirable)
 Relations: Appelée après simulations ou lors de l'analyse du réseau. Dépend de isFranchissable pour tester chaque transition.
 */
-function isDeadlock(reseau) {
-    for (const noeud in reseau) {
+function isDeadlock(graph) {
+    for (const noeud in graph) {
         if (noeud.startsWith("T")) {
-            if (isFranchissable(reseau, noeud)) {
+            if (isFranchissable(graph, noeud)) {
                 return false;
             }
         }
@@ -746,9 +746,9 @@ artificiellement dans la même itération.
 Retourne: le réseau modifié après avoir tiré toutes les transitions franchissables simultanément
 Relations: Fonction principale utilisée par l'UI React. Appelle isFranchissable pour vérifier et echangeRessources pour exécuter.
 */
-function simulation(reseauLocal) {
-    let copy = structuredClone(reseauLocal);
-    let res = structuredClone(reseauLocal);
+function simulation(graph) {
+    let copy = structuredClone(graph);
+    let res = structuredClone(graph);
 
     for (let elem in copy){
         if (elem.startsWith("T")){
