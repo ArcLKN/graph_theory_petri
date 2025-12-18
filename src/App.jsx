@@ -604,17 +604,6 @@ function App() {
 							onClick={() => handleTransitionClick(transition.id)}
 						/>
 					))}
-					{placingAnnotation && (
-						<text
-							x={mousePos.x}
-							y={mousePos.y}
-							fill='rgba(0,0,0,0.3)' // texte fantôme semi-transparent
-							fontSize={16}
-							pointerEvents='none' // le texte fantôme ne bloque pas le clic
-						>
-							New annotation
-						</text>
-					)}
 					{annotations.map((ann) => (
 						<text
 							key={ann.id}
