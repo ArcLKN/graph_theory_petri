@@ -143,19 +143,15 @@ function marquageInitial(graph) {
 }
 
 /*
-calculNouveauMarquage - Simule le tir d'une transition de manière hypothétique
-Description: Crée une copie du marquage, retire les jetons nécessaires des états d'entrée, ajoute les jetons aux états de sortie.
-Important: L'original n'est jamais touché. C'est pour tester "et si on tirait cette transition?" sans modifier le réseau réel.
-IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids).
-Fonctionnement:
-1. Crée une copie du marquage avec spread operator {...marquage}
-2. Parcourt tous les états pour trouver ceux qui pointent vers la transition (états d'entrée)
-3. Pour chaque état, accumule les poids de tous les arcs qui pointent vers la transition
-4. Retire la somme totale des jetons de l'état selon les poids cumulés (consommation)
-5. Ajoute les jetons aux états de sortie de la transition (production)
-6. Retourne le nouveau marquage sans toucher l'original
-Retourne: nouveau marquage (objet) avec les jetons mis à jour, l'original reste intact
-Relations: Utilisée par isBorne pour tester plusieurs tirs sans modifier le réseau réel. Différente de echangeRessources qui mute.
+calculNouveauMarquage - Simule un tir de transition de façon hypothétique
+Description: Crée une copie du marquage actuel, simule le tir d'une transition dessus, et retourne le nouveau marquage sans jamais 
+toucher à l'original. Permet de tester "et si on tirait cette transition ?" sans modifier le réseau réel.
+Fonctionnement: Fait une copie du marquage avec {...marquage}, parcourt tous les états pour trouver ceux qui alimentent la transition 
+(accumule les poids si plusieurs arcs), retire les jetons correspondants, puis ajoute les jetons aux états de sortie de la transition.
+Point important: Gère les arcs multiples en cumulant les poids (si E1 a deux arcs vers T1 de poids 2 et 3, retire 5 jetons de E1).
+Retourne: nouveau objet marquage avec les jetons mis à jour, l'original reste intact.
+Relations: Utilisée par isBorne, isInvariantTransitions et isInvariantConservation pour explorer l'espace d'états. Différente de 
+echangeRessources qui modifie directement le réseau.
 */
 function calculNouveauMarquage(transition, marquage, graph) {
     const nouveau = { ...marquage };
@@ -189,19 +185,14 @@ function calculNouveauMarquage(transition, marquage, graph) {
 
 /*
 isFranchissable - Vérifie si une transition peut être tirée
-Description: Parcourt tous les états qui pointent vers cette transition et vérifie qu'ils ont assez de jetons.
-IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids).
-Exemple simple: Si E1→T1 avec poids 2, alors E1 doit avoir au moins 2 jetons pour que T1 soit franchissable.
-Exemple multi-arcs: Si E1 a deux arcs vers T1 (poids 2 et 3), alors E1 doit avoir au moins 5 jetons (2+3).
-Fonctionnement:
-1. Parcourt tous les nœuds du réseau
-2. Pour chaque état (E), regarde tous ses arcs sortants
-3. Accumule les poids de tous les arcs qui pointent vers la transition demandée
-4. Vérifie que l'état a assez de jetons pour la somme totale des poids
-5. Si un seul état manque de jetons, retourne false
-6. Si tous les états d'entrée ont assez de jetons, retourne true
-Retourne: booléen (true si la transition peut être tirée, false sinon)
-Relations: Appelée AVANT echangeRessources dans simulation. Utilisée par isDeadlock et isBorne.
+Description: Parcourt tous les états qui alimentent la transition et vérifie qu'ils ont assez de jetons. 
+Une transition n'est franchissable que si TOUS ses états d'entrée ont suffisamment de ressources.
+Fonctionnement: Pour chaque état du réseau, regarde ses arcs sortants et cumule les poids de ceux qui pointent vers la transition 
+demandée. Si le total cumulé est supérieur aux jetons disponibles dans l'état, retourne false immédiatement.
+Point important: Gère les arcs multiples en additionnant les poids (E1→T1 poids 2 + E1→T1 poids 3 = besoin de 5 jetons dans E1).
+Retourne: booléen (true si tous les états d'entrée ont assez de jetons, false si au moins un état manque de ressources)
+Relations: Toujours appelée AVANT echangeRessources dans simulation pour vérifier qu'un tir est possible. Utilisée aussi par 
+isDeadlock et isBorne.
 */
 function isFranchissable(currentReseau, transitionId) {
     for (const noeud in currentReseau) {
@@ -225,20 +216,15 @@ function isFranchissable(currentReseau, transitionId) {
 }
 
 /*
-echangeRessources - Exécute le tir d'une transition pour de vrai
-Description: Contrairement à calculNouveauMarquage, cette fonction modifie directement l'objet reseau.
-Retire les jetons des états d'entrée, ajoute les jetons aux états de sortie.
-IMPORTANT: Gère le cas où un même état a plusieurs arcs vers la même transition (somme des poids retirés).
-Fonctionnement:
-1. Parcourt tous les états du réseau
-2. Pour chaque état, accumule les poids de tous les arcs qui pointent vers la transition
-3. Retire la somme totale des jetons de l'état (consommation)
-4. Parcourt les arcs sortants de la transition
-5. Ajoute les jetons aux états de sortie selon les poids (production)
-6. Mutation directe: reseau[noeud][0] -= total_poids ou += poids
-Retourne: rien (void) car la mutation de reseau est l'effet voulu
-Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Différente de calculNouveauMarquage (retourne copie).
-Changements: Amélioration pour gérer plusieurs arcs d'un même état vers une transition (cohérence avec isFranchissable)
+echangeRessources - Exécute réellement le tir d'une transition
+Description: Modifie directement le réseau en retirant les jetons des états d'entrée et en ajoutant les jetons aux états de sortie. 
+Contrairement à calculNouveauMarquage qui simule, celle-ci change vraiment le réseau.
+Fonctionnement: Parcourt tous les états pour trouver ceux qui alimentent la transition, cumule les poids de leurs arcs (gère les arcs 
+multiples), retire les jetons correspondants. Ensuite parcourt les sorties de la transition et ajoute les jetons aux états de 
+destination.
+Point important: Mutation directe avec -= et += sur le réseau passé en paramètre, pas de copie créée.
+Retourne: le réseau modifié (même si la modification est faite en place)
+Relations: Appelée par simulation APRÈS vérification avec isFranchissable. Opposée à calculNouveauMarquage qui retourne une copie.
 */
 function echangeRessources(reseau, transitionId) {
     for (const noeud in reseau) {
