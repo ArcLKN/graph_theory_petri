@@ -600,6 +600,19 @@ function App() {
 							onClick={() => handleTransitionClick(transition.id)}
 						/>
 					))}
+<<<<<<< HEAD
+					{placingAnnotation && (
+						<text
+							x={mousePos.x}
+							y={mousePos.y}
+							fill='rgba(0,0,0,0.3)' // texte fantôme semi-transparent
+							fontSize={16}
+							pointerEvents='none' // le texte fantôme ne bloque pas le clic
+						>
+							New annotation
+						</text>
+					)}
+=======
 					{placingTransition && (
 						<rect
 							x={mousePos.x - 20}
@@ -613,11 +626,22 @@ function App() {
 						/>
 					)}
 					{/* Annotations existantes */}
+>>>>>>> 221a13c40cc6af3c3c4274b828c3e2a564410e5a
 					{annotations.map((ann) => (
 						<text
 							key={ann.id}
 							x={ann.x}
 							y={ann.y}
+<<<<<<< HEAD
+							fill={"black"}
+							fontSize="16"
+							style={{ cursor: "pointer", userSelect: "none" }}
+							onMouseDown={() => setMovingAnnotationId(ann.id)} // start drag
+							onClick={(e) => {
+							e.stopPropagation(); // pour ne pas cliquer sur le canvas
+							setSelectedAnnotation(ann);
+							setIsTextBoxOpen(true);
+=======
 							fontSize={16}
 							style={{ cursor: "pointer", userSelect: "none" }}
 							pointerEvents="all"
@@ -652,11 +676,14 @@ function App() {
 								e.stopPropagation();
 								setSelectedAnnotation(ann);
 								setIsTextBoxOpen(true);
+>>>>>>> 221a13c40cc6af3c3c4274b828c3e2a564410e5a
 							}}
 						>
 							{ann.text}
 						</text>
 					))}
+<<<<<<< HEAD
+=======
 
 					{/* Texte fantôme lors du placement */}
 					{placingAnnotation && pendingAnnotation && (
@@ -670,6 +697,7 @@ function App() {
 							{pendingAnnotation.text}
 						</text>
 					)}
+>>>>>>> 221a13c40cc6af3c3c4274b828c3e2a564410e5a
 				</svg>
 
 				{placingPlace || (movingPlaceId && !selectedTransition) ? (
