@@ -615,6 +615,18 @@ function App() {
 							New annotation
 						</text>
 					)}
+					{placingTransition && (
+						<rect
+							x={mousePos.x - 20}
+							y={mousePos.y - 30}
+							width={20}
+							height={60}
+							fill='rgba(0,0,0,0.2)'
+							stroke='black'
+							strokeWidth='2'
+							pointerEvents='none'
+						/>
+					)}
 					{annotations.map((ann) => (
 						<text
 							key={ann.id}
