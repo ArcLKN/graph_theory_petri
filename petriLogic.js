@@ -625,7 +625,7 @@ le marque comme visité, collecte-le s'il commence par "E", et empile tous ses v
 Retourne: tableau des états (nœuds commençant par "E") trouvés pendant l'exploration
 Relations: Fonction utilitaire de parcours, utilisée pour explorer le réseau. Travaille avec currentReseau (variable globale).
 */
-function DFS(départ) {
+function DFS(graph, départ) {
     var visités = [];
     var étatsTrouvés = [];
     var pile = [départ];
@@ -639,7 +639,7 @@ function DFS(départ) {
                 étatsTrouvés.push(noeud);
             }
 
-             var arcs = currentReseau[noeud];
+             var arcs = graph[noeud];
             for (var j = 1; j < arcs.length; j++) {
                 var voisin = arcs[j][0];
                 pile.push(voisin);
