@@ -11,13 +11,12 @@ var reseau = {
 };
 /*
 isBipartite - Vérifie que le réseau Petri est bien structuré
-Description: Un réseau valide a deux groupes : les états (E) sont toujours connectés à des transitions (T), et inversement.
-Méthode: Utilise une technique de coloration avec BFS (Breadth-First Search). Si on peut colorier tous les nœuds en 2 couleurs 
-où les voisins ont toujours des couleurs différentes, le graphe est bipartite.
-Fonctionnement: Démarre d'un nœud, lui assigne couleur 0, explore ses voisins avec BFS et leur assigne couleur 1.
-Si un voisin a déjà la même couleur que le nœud actuel, il y a conflit et le graphe n'est pas bipartite.
-Retourne: booléen (true si bipartite, false si conflit détecté)
-Relations: Fonction de validation indépendante, utilisée avant la simulation
+Description: Un réseau valide a deux groupes distincts : les états (E) connectés uniquement aux transitions (T), 
+et vice-versa. Cette séparation garantit qu'on alterne toujours entre états et transitions.
+Fonctionnement: Utilise un algorithme de coloration avec BFS. On assigne couleur 0 au premier nœud, puis couleur 1 à ses voisins, 
+puis couleur 0 aux voisins de ces voisins, etc. Si deux nœuds voisins ont la même couleur, c'est qu'il y a un problème de structure.
+Retourne: booléen (true si le graphe est bipartite donc structure valide, false si conflit détecté)
+Relations: Fonction de validation indépendante, appelée avant toute simulation pour vérifier l'intégrité structurelle du réseau
 */
 function isBipartite(graph) {
     const color = {};
@@ -62,18 +61,13 @@ function isBipartite(graph) {
 }
 
 /*
-marquageValide - Vérifie que le marquage du réseau de Pétri est valide
-Description: Parcourt tous les états (places) et transitions du réseau pour vérifier
-             que le nombre de ressources (jetons) associé à chacun est correct.
-             Un marquage est considéré valide si chaque valeur est un entier
-             et si elle est supérieure ou égale à 0.
-Importance: Essentielle pour garantir la cohérence du réseau avant une simulation,
-            car un marquage invalide peut produire des comportements impossibles
-            (ressources négatives ou non entières).
-Méthode: Vérifie pour chaque état et transition que la valeur associée est de type entier
-         (Number.isInteger) et qu’elle est >= 0.
-Retourne: booléen (true si tous les marquages sont valides, false sinon)
-Relations: Fonction de validation, utilisée avant le lancement de la simulation
+marquageValide - Vérifie la cohérence des jetons dans le réseau
+Description: Parcourt tous les nœuds pour s'assurer que chaque nombre de jetons est un entier positif ou nul. 
+Évite les situations impossibles comme des jetons négatifs ou des valeurs décimales.
+Fonctionnement: Parcourt chaque état et transition, vérifie que la valeur est un entier avec Number.isInteger() et qu'elle est >= 0. 
+Vérifie aussi que l'état de départ existe.
+Retourne: booléen (true si tous les marquages sont valides, false dès qu'une valeur invalide est détectée)
+Relations: Fonction de validation appelée avant le lancement de simulations, travaille indépendamment des autres fonctions
 */
 function marquageValide(reseau) {
 
