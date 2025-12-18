@@ -78,6 +78,7 @@ function App() {
 	const [isDialogBoxOpen, setDialogBoxIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState(1);
 	const [doSimulation, setDoSimulation] = useState(false);
+	const [simulationSpeed, setSimulationSpeed] = useState(50);
 
 	const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -341,7 +342,7 @@ function App() {
 
 			setPlaces(newPlaces);
 			setArcs(newArcs);
-		}, 1000);
+		}, simulationSpeed);
 
 		return () => clearInterval(interval);
 	}, [doSimulation, places, transitions, arcs]);
@@ -537,6 +538,7 @@ function App() {
 				handlePuits={handlePuits}
 				handleSources={handleSources}
 				handleEstSimple={handleEstSimple}
+				setSimulationSpeed={setSimulationSpeed}
 			/>
 
 			{/* Canvas for drawing Pétri Network will go here */}

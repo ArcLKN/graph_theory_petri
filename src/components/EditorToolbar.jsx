@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/button-group";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import SimulationMenu from "./SimulationMenu.jsx";
 import AnnotationMenu from "./AnnotationMenu.jsx";
 
@@ -33,6 +34,7 @@ export default function EditorToolbar({
 	handlePuits,
 	handleSources,
 	handleEstSimple,
+	setSimulationSpeed,
 }) {
 	return (
 		<div className='Menu w-full flex flex-row items-center justify-between p-2 px-4 bg-gray-200 border-b border-gray-300 rounded-2xl'>
@@ -71,6 +73,20 @@ export default function EditorToolbar({
 					>
 						{doSimulation ? "Stop Simulation" : "Start Simulation"}
 					</Button>
+
+					<div className='flex flex-row items-center'>
+						<p>Speed: </p>
+						<Slider
+							defaultValue={[500]}
+							min={10}
+							max={990}
+							step={10}
+							className='w-24 mx-2'
+							onValueChange={(value) =>
+								setSimulationSpeed(1000 - value[0])
+							}
+						/>
+					</div>
 
 					<SimulationMenu
 						setResult={setResult}
